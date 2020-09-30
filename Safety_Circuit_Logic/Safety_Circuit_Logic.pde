@@ -1,24 +1,3 @@
-/*
-Hello
-*/
-
-//Another arbitrary change
-
-
-
-
-
-
-
-
-
-
-//agfw
-//g
-//w
-//gaw
-//g
-
 int ESTOP, SAFETY_CIRCUIT,DEFEAT_SAFETY,THREHOLD,SHUTTER, LASER_FIRE, WARNING, FAULT, SLEEP, FIBER_ERROR, PROGRAM;
 int high, low;
 
