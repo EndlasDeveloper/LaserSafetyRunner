@@ -2,7 +2,22 @@
 Hello
 */
 
+//Another arbitrary change
 
+
+
+
+
+
+
+
+
+
+//agfw
+//g
+//w
+//gaw
+//g
 
 int ESTOP, SAFETY_CIRCUIT,DEFEAT_SAFETY,THREHOLD,SHUTTER, LASER_FIRE, WARNING, FAULT, SLEEP, FIBER_ERROR, PROGRAM;
 int high, low;
@@ -130,14 +145,6 @@ void draw() {
 }
 
 
-/*Name:programrun
-Brief: 
-*/
-int programrun() {
-  return 0;
-}
-
-
 /*
 Name: safetyflag
 Brief:safety circuit/ESTOP loop - find way to set this as its own command so it can be referenced while laser is firing. 
@@ -215,4 +222,11 @@ int ready2fire()
   }
   
   return 0; //return false value if not ready to go
+}
+
+/*Name:programrun
+Brief: 
+*/
+int programrun() {
+  return 0;
 }
