@@ -1,7 +1,7 @@
-// Define 
+// Define // preprocessor all caps
 #define program 1 
-#define estop 2
-#define safecircuit 3
+#define ESTOP 2
+#define SAFECIRCUIT 3
 #define threshold 4
 #define shutter 5
 #define laserfire 6
@@ -36,7 +36,7 @@ void loop()
   
   if s == 1 //estop flag
   {
-    img = loadImage("estop active.jpg");
+    img = loadImage("estopactive.jpg");
     draw();
     digitalWrite(fault, high);
   }
@@ -60,14 +60,35 @@ void loop()
   {      
     r = ready2fire; //ready check
     
-    if r == 1 
+    if r == 1 //threshold is on
+    {
+      img = loadImage("pilotlaser.jpg");
+      draw();
+      digitalWrite(fault, high);
+    }
+      
+    else if r == 2 //shutter is open
+    {
+      img = loadImage("shutteropen.jpg");
+      draw();
+      digitalWrite(fault, high);
+    }
+    
+    else if r == 3 //there is a fiber error
+    {
+      img = loadImage("fibererror.jpg");
+      draw();
+      digitalWrite(fault, high);
+    }
+        
+    if r == 4 
     {
       p = programrun; //check if program is currently running
       
-      while p == 1 || r =1 //send laser firing signal if both checks are passed
+      while p == 1 || r == 1 //send laser firing signal if both checks are passed
       {
         digitalWrite(laserfire, high);
-        img = loadImage("DANGERLASERON.jpg");
+        img = loadImage("DANGERPROG.jpg");
         draw();
         
         p = programrun();
@@ -80,14 +101,14 @@ void loop()
     
     else
     {
-      img = loadImage(".jpg");// error image? not sure how this thread occurs
+      img = loadImage("error.jpg");// error image? not sure how this thread occurs
       draw();
     }
   }             
   
   else
   {
-    img = loadImage("Safety Circuit Error.jpg"); // General issue with the safety circuit that cannot be determined
+    img = loadImage("SafetyCircuitError.jpg"); // General issue with the safety circuit that cannot be determined
     draw();
     digitalWrite(fault, high);
   }
@@ -147,6 +168,8 @@ int ready2fire()
     {
       check1 = 1; //pass check and set 1/3 to fire laser
     }
+  else
+      return 1;
 
   stat = digitalRead(shutter); //read input pin
   
@@ -154,17 +177,21 @@ int ready2fire()
     {
       check2 = 1; //pass check and set 2/3 to fire laser
     }
-
+  else
+    return 2;
+    
   stat = digitalRead(fiber); //read input pin
   
   if stat == high;
     {
       check3 = 1; //pass check and set 3/3 to fire laser
     }
-
+  else
+    return 3;
+    
   if check1 || check2 || check3 == 1 //three locks to open the door
     {
-    return 1;
+    return 4;
     }
       
   return 0; //return false value if not ready to go
