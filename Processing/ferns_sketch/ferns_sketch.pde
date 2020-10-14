@@ -178,7 +178,7 @@ void loop() {
       println("Threshold is " + THRESHLD);    
      
       // Set time delay between signs
-      delay(15);
+      delay(500);
        
       // Randomize input to simulate multiple inputs and run through issue cases
       inputState = int(random(0, 9));
