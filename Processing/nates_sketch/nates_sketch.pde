@@ -4,19 +4,19 @@ import processing.serial.*;
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTANTS
 // --------- BYTES EXPECTED IN BUFFER FOR STATE ----------------- //////////
-final int BUFFER_BYTES_TO_READ = 1;
+final int BUFFER_BYTES_TO_READ = 4;
 // --------- MASKS ------------------ ////////////////////////////////////// 
-final int ESTOP = 0x1;          // (1)
-final int SAFETY_CIRCUIT = 0x2; // (2)
-final int DEFEAT_SAFETY = 0x4;  // (4)
-final int LASER_FIRE = 0x8;     // (8)
-final int WARNING = 0x10;       // (16)
-final int FIBER_ERROR = 0x20;   // (32)
-final int THRESHOLD = 0x40;     // (64)
-final int SHUTTER = 0x80;       // (128)
-final int FAULT = 0x100;        // (256)
-final int SLEEP = 0x200;        // (512)
-final int PROGRAM = 0x400;      // (1024)
+final int ESTOP_MASK = 0b1;             // (1)
+final int SAFETY_CIRCUIT_MASK = 0b10;   // (2)
+final int DEFEAT_SAFETY_MASK = 0xb100;  // (4)
+final int LASER_FIRE_MASK = 0xb1000;    // (8)
+final int WARNING_MASK = 0b10000;       // (16)
+final int FIBER_ERROR_MASK = 0b100000;  // (32)
+final int THRESHOLD_MASK = 0b1000000;   // (64)
+final int SHUTTER_MASK = 0b10000000;    // (128)
+final int FAULT_MASK = 0b100000000;     // (256)
+final int SLEEP_MASK = 0b1000000000;    // (512)
+final int PROGRAM_MASK = 0b10000000000; // (1024)
 // --------- IMAGES & PATH ------------ ///////////////////////////////////
 final String IMG_PATH = "../resources/";
 final String ESTOP_IMG = IMG_PATH + "estop_active.jpg";
@@ -93,12 +93,14 @@ int parseBytes(byte[] bytes){
                 this method acts as the event listener for the serial port opened during initialization. 
 */
 void serialEvent(Serial myPort) {
-
-    if(inputState <= 512){
-      inputState <<= 1;
-    } else {
-      inputState = 1;
-    }
+    // println("");
+    inputState = myPort.read();
+    // println("myPort.read() = " + inputState);
+    //if(inputState <= 512){
+    //  inputState <<= 1;
+    //} else {
+    //  inputState = 1;
+    //}
     
     println("");
     println("int state: " + inputState);
@@ -120,48 +122,48 @@ void parseInputState(int inputState){
     states = new HashMap();
     // set local var
     // ESTOP
-    int s = inputState & ESTOP;
-    states.put(ESTOP, (s >= 1));
+    int s = inputState & ESTOP_MASK;
+    states.put(ESTOP_MASK, (s >= 1));
     
     // SAFETY CIRCUIT
-    s = inputState & SAFETY_CIRCUIT;
-    states.put(SAFETY_CIRCUIT, (s >= 1));
+    s = inputState & SAFETY_CIRCUIT_MASK;
+    states.put(SAFETY_CIRCUIT_MASK, (s >= 1));
     
     // DEFEAT SAFETY
-    s = inputState & DEFEAT_SAFETY;
-    states.put(DEFEAT_SAFETY, (s >= 1));
+    s = inputState & DEFEAT_SAFETY_MASK;
+    states.put(DEFEAT_SAFETY_MASK, (s >= 1));
     
     // LASER FIRE
-    s = inputState & LASER_FIRE;
-    states.put(LASER_FIRE, (s >= 1));
+    s = inputState & LASER_FIRE_MASK;
+    states.put(LASER_FIRE_MASK, (s >= 1));
     
     // WARNING
-    s = inputState & WARNING;
-    states.put(WARNING, (s >= 1));
+    s = inputState & WARNING_MASK;
+    states.put(WARNING_MASK, (s >= 1));
     
     // FIBER ERROR
-    s = inputState & FIBER_ERROR;
-    states.put(FIBER_ERROR, (s >= 1));
+    s = inputState & FIBER_ERROR_MASK;
+    states.put(FIBER_ERROR_MASK, (s >= 1));
     
     // THRESHOLD
-    s = inputState & THRESHOLD;
-    states.put(THRESHOLD, (s >= 1));
+    s = inputState & THRESHOLD_MASK;
+    states.put(THRESHOLD_MASK, (s >= 1));
     
     // SHUTTER
-    s = inputState & SHUTTER;
-    states.put(SHUTTER, (s >= 1));
+    s = inputState & SHUTTER_MASK;
+    states.put(SHUTTER_MASK, (s >= 1));
     
     // FAULT
-    s = inputState & FAULT;
-    states.put(FAULT, (s >= 1));
+    s = inputState & FAULT_MASK;
+    states.put(FAULT_MASK, (s >= 1));
     
     // SLEEP
-    s = inputState & SLEEP;
-    states.put(SLEEP, (s >= 1));
+    s = inputState & SLEEP_MASK;
+    states.put(SLEEP_MASK, (s >= 1));
     
     // PROGRAM
-    s = inputState & PROGRAM;
-    states.put(PROGRAM, (s >= 1)); 
+    s = inputState & PROGRAM_MASK;
+    states.put(PROGRAM_MASK, (s >= 1)); 
 }
 
 /*
@@ -175,47 +177,47 @@ void loop() {
     // set curr state to the input state
     currState = inputState;
     
-    if(states.get(ESTOP)){
+    if(states.get(ESTOP_MASK)){
       img = loadImage(ESTOP_IMG);
       println("ESTOP");
       
-    } else if(states.get(SAFETY_CIRCUIT)){
+    } else if(states.get(SAFETY_CIRCUIT_MASK)){
       img = loadImage(SAFETY_CIRCUIT_IMG);
       println("SAFETY_CIRCUIT");
       
-    } else if(states.get(DEFEAT_SAFETY)){
+    } else if(states.get(DEFEAT_SAFETY_MASK)){
       img = loadImage(DEFEAT_SAFETY_IMG);
       println("DEFEAT_SAFETY");
       
-    } else if(states.get(LASER_FIRE)){
+    } else if(states.get(LASER_FIRE_MASK)){
       img = loadImage(LASER_FIRE_IMG);
       println("LASER_FIRE");
       
-    } else if(states.get(WARNING)){
+    } else if(states.get(WARNING_MASK)){
       img = loadImage(WARNING_IMG);
       println("WARNING");
       
-    } else if(states.get(FIBER_ERROR)){
+    } else if(states.get(FIBER_ERROR_MASK)){
       img = loadImage(FIBER_ERROR_IMG);
       println("FIBER_ERROR");
       
-    } else if(states.get(FAULT)){
+    } else if(states.get(FAULT_MASK)){
       // TODO: set FAULT image here
       println("FAULT");
       
-    } else if(states.get(SLEEP)){
+    } else if(states.get(SLEEP_MASK)){
       // TODO: set SLEEP image here
       println("SLEEP");
       
-    } else if(states.get(PROGRAM)){
+    } else if(states.get(PROGRAM_MASK)){
       // TODO: set PROGRAM image here
       println("PROGRAM");
       
-    } else if(states.get(THRESHOLD)){
+    } else if(states.get(THRESHOLD_MASK)){
       // TODO: set THRESHOLD image here
       println("THRESHOLD");
       
-    } else if(states.get(SHUTTER)){
+    } else if(states.get(SHUTTER_MASK)){
       // TODO: set SHUTTER image here
       println("SHUTTER");
       
