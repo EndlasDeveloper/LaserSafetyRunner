@@ -6,17 +6,17 @@ import processing.serial.*;
 // --------- BYTES EXPECTED IN BUFFER FOR STATE ----------------- //////////
 final int BUFFER_BYTES_TO_READ = 4;
 // --------- MASKS ------------------ ////////////////////////////////////// 
-final int ESTOP_MASK = 0b1;             // (1)
-final int SAFETY_CIRCUIT_MASK = 0b10;   // (2)
-final int DEFEAT_SAFETY_MASK = 0xb100;  // (4)
-final int LASER_FIRE_MASK = 0xb1000;    // (8)
-final int WARNING_MASK = 0b10000;       // (16)
-final int FIBER_ERROR_MASK = 0b100000;  // (32)
-final int THRESHOLD_MASK = 0b1000000;   // (64)
-final int SHUTTER_MASK = 0b10000000;    // (128)
-final int FAULT_MASK = 0b100000000;     // (256)
-final int SLEEP_MASK = 0b1000000000;    // (512)
-final int PROGRAM_MASK = 0b10000000000; // (1024)
+final int ESTOP_MASK = 0b1;             // 00000000001 (1)
+final int SAFETY_CIRCUIT_MASK = 0b10;   // 00000000010 (2)
+final int DEFEAT_SAFETY_MASK = 0xb100;  // 00000000100 (4)
+final int LASER_FIRE_MASK = 0xb1000;    // 00000001000 (8)
+final int WARNING_MASK = 0b10000;       // 00000010000 (16)
+final int FIBER_ERROR_MASK = 0b100000;  // 00000100000 (32)
+final int THRESHOLD_MASK = 0b1000000;   // 00001000000 (64)
+final int SHUTTER_MASK = 0b10000000;    // 00010000000 (128)
+final int FAULT_MASK = 0b100000000;     // 00100000000 (256)
+final int SLEEP_MASK = 0b1000000000;    // 01000000000 (512)
+final int PROGRAM_MASK = 0b10000000000; // 10000000000 (1024)
 // --------- IMAGES & PATH ------------ ///////////////////////////////////
 final String IMG_PATH = "../resources/";
 final String ESTOP_IMG = IMG_PATH + "estop_active.jpg";
@@ -171,6 +171,10 @@ void parseInputState(int inputState){
  * Description: infinite loop method for continually checking the state of the system  
  */
 void loop() {
+  
+  // TODO: **** Ask Fernando whether the signage should say "Do no enter." or "Do not enter laser chamber." rather than "Do no enter when sign is displayed."
+  // ***** If the sign is being read, I am pretty sure it is currently being displayed?
+  
   // if the input doesn't match the curr state
   if(currState != inputState){ //<>//
     parseInputState(inputState);
