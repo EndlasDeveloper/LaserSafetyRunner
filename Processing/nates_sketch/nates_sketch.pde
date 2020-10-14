@@ -6,17 +6,17 @@ import processing.serial.*;
 // --------- BYTES EXPECTED IN BUFFER FOR STATE ----------------- //////////
 final int BUFFER_BYTES_TO_READ = 1;
 // --------- MASKS ------------------ ////////////////////////////////////// 
-final int ESTOP = 1;
-final int SAFETY_CIRCUIT = 2;
-final int DEFEAT_SAFETY = 4;
-final int LASER_FIRE = 8;
-final int WARNING = 16;
-final int FIBER_ERROR = 32;
-final int THRESHOLD = 64;
-final int SHUTTER = 128;
-final int FAULT = 256;
-final int SLEEP = 512;
-final int PROGRAM = 1024;
+final int ESTOP = 0x1;          // (1)
+final int SAFETY_CIRCUIT = 0x2; // (2)
+final int DEFEAT_SAFETY = 0x4;  // (4)
+final int LASER_FIRE = 0x8;     // (8)
+final int WARNING = 0x10;       // (16)
+final int FIBER_ERROR = 0x20;   // (32)
+final int THRESHOLD = 0x40;     // (64)
+final int SHUTTER = 0x80;       // (128)
+final int FAULT = 0x100;        // (256)
+final int SLEEP = 0x200;        // (512)
+final int PROGRAM = 0x400;      // (1024)
 // --------- IMAGES & PATH ------------ ///////////////////////////////////
 final String IMG_PATH = "../resources/";
 final String ESTOP_IMG = IMG_PATH + "estop_active.jpg";
@@ -34,7 +34,7 @@ final String PROGRAM_IMG = "";
 ////////////////////////////////////////////////////////////////////////////////
 
 // STATE MAP //
-HashMap<Integer, Boolean> states = new HashMap();
+HashMap<Integer, Boolean> states;
 
 // GLOBAL OBJECTS
 PImage img;
@@ -84,12 +84,7 @@ void setup() {
 }
 
 int parseBytes(byte[] bytes){
-  int zeroByte, oneByte, twoByte, threeByte;
-  zeroByte = bytes[0];
-  oneByte = bytes[1] << 8;
-  twoByte = bytes[2] << 16;
-  threeByte = bytes[3] << 24;
-  return zeroByte + oneByte + twoByte + threeByte;
+  return bytes[0] + bytes[1] << 1 + bytes[2] << 2 +bytes[3] << 3;
 }
 
 /*
@@ -98,16 +93,18 @@ int parseBytes(byte[] bytes){
                 this method acts as the event listener for the serial port opened during initialization. 
 */
 void serialEvent(Serial myPort) {
+
+    if(inputState <= 512){
+      inputState <<= 1;
+    } else {
+      inputState = 1;
+    }
+    
     println("");
     println("int state: " + inputState);
     println("binary state: " + binary(inputState));
     println("serial event index:" + serialCount++);
     println("");
-    if(inputState < 1024){
-      inputState <<= inputState;
-    } else {
-      inputState = 1;
-    }
 }
 
 /*
@@ -120,6 +117,7 @@ void draw() {
 }
 
 void parseInputState(int inputState){
+    states = new HashMap();
     // set local var
     // ESTOP
     int s = inputState & ESTOP;
@@ -202,19 +200,31 @@ void loop() {
       println("FIBER_ERROR");
       
     } else if(states.get(FAULT)){
+      // TODO: set FAULT image here
       println("FAULT");
+      
     } else if(states.get(SLEEP)){
+      // TODO: set SLEEP image here
       println("SLEEP");
+      
     } else if(states.get(PROGRAM)){
+      // TODO: set PROGRAM image here
       println("PROGRAM");
+      
     } else if(states.get(THRESHOLD)){
+      // TODO: set THRESHOLD image here
       println("THRESHOLD");
+      
     } else if(states.get(SHUTTER)){
+      // TODO: set SHUTTER image here
       println("SHUTTER");
-    } else {
-      println("all states are off");
+      
+    } else { // TODO: consider whether this code block should throw an exception or is an acceptable possibility
+      println("All flags in states map are false.");
       println("state: " + currState);
     }
     draw();
   }
+  // nothing changed in the state, so do not draw anthing
+  return;
 }
