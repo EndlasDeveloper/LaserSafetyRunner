@@ -33,19 +33,16 @@ final String SLEEP_IMG = "";
 final String PROGRAM_IMG = "";
 ////////////////////////////////////////////////////////////////////////////////
 
-// STATE MAP //
-HashMap<Integer, Boolean> states;
-
 // GLOBAL OBJECTS
-PImage img;
-Serial myPort;
+PImage img;                       // image object for setting an image file to for rendering
+Serial myPort;                    // Serial object for USB serial communications
+HashMap<Integer, Boolean> states; // states hash table to store whether a state's bit was set or not
 
 // GLOBAL VARS
-int inputState = 1;
-int currState = -1;
+int inputState = 1; // variable for holding direct serial inputs
+int currState = -1; // var for saving current state
 int serialCount = 0;
 byte[] serialInBuffer = new byte[BUFFER_BYTES_TO_READ];
-String inString;
 
 /*
  * Name: setup
@@ -83,6 +80,10 @@ void setup() {
   // delay(1500);
 }
 
+/*
+ * Name: parseBytes
+ * Description: Not sure if this method is needed, but returns an integer built up from 4 bytes
+*/
 int parseBytes(byte[] bytes){
   return bytes[0] + bytes[1] << 1 + bytes[2] << 2 +bytes[3] << 3;
 }
@@ -118,6 +119,10 @@ void draw() {
   loop();
 }
 
+/*
+ * Name: hashInputStates
+ * Description: takes input state and hashes a boolean with each state's mask to indicate whether that state's bit was set
+ */
 void parseInputState(int inputState){
     states = new HashMap();
     // set local var
@@ -183,50 +188,37 @@ void loop() {
     
     if(states.get(ESTOP_MASK)){
       img = loadImage("../resources/estop_active.jpg");
-      draw();
       println("ESTOP");
       
     } else if(states.get(SAFETY_CIRCUIT_MASK)){
       img = loadImage("../resources/safety_circiut_error.jpg");
-      draw();
       println("SAFETY_CIRCUIT");
       
     } else if(states.get(DEFEAT_SAFETY_MASK)){
       img = loadImage("../resources/defeat_safety.jpg");
-      draw();
       println("DEFEAT_SAFETY");
       
     } else if(states.get(LASER_FIRE_MASK)){ //sign needs to be designated if threshold is on or off in case pilot laser is fired
-      if (states.get(THRESHOLD_MASK)){
-         img = loadImage("../resources/pilot_laser.jpg");
-         draw();
-         break;
-      }              
+      if (states.get(THRESHOLD_MASK))
+         img = loadImage("../resources/pilot_laser.jpg");               
       else
-         img = loadImage("../resources/laser_fire.jpg");
-         draw();
-         break;
-      } 
+         img = loadImage("../resources/laser_fire.jpg");       
       println("LASER_FIRE");
       
     } else if(states.get(WARNING_MASK)){
       img = loadImage("../resources/warning.jpg");
-      draw();
       println("WARNING");
       
     } else if(states.get(FIBER_ERROR_MASK)){
       img = loadImage("../resources/fiber_error.jpg");
-      draw();
       println("FIBER_ERROR");
       
     } else if(states.get(FAULT_MASK)){
       img = loadImage("../resources/error.jpg");
-      draw();
-      println("FAULT");
+      println("FAULT");  
       
     } else if(states.get(SLEEP_MASK)){
       img = loadImage("../resources/sleep.jpg");
-      draw();
       println("SLEEP");
       
       //Note: removed threshold, shutter, and program checks.
@@ -234,38 +226,38 @@ void loop() {
       println("All flags in states map are false.");
       println("state: " + currState);
     }
-    draw();
-}
     
-  if (states.get(PROGRAM_MASK)){
-     rectMode(CORNER);  // Default rectMode is CORNER
-     fill(255, 0, 0);  // Set fill to white
-     rect(315, 465, 330, 45);
+    draw();
+    if(states.get(PROGRAM_MASK)){
+       rectMode(CORNER);  // Default rectMode is CORNER
+       fill(255, 0, 0);  // Set fill to white
+       rect(315, 465, 330, 45);
      
-     textSize(32);
-     fill(255);
-     text("PROGRAM RUNNING", 325, 500); 
-  }
+       textSize(32);
+       fill(255);
+       text("PROGRAM RUNNING", 325, 500); 
+    }
                 
-  if (states.get(SHUTTER_MASK)){
-     rectMode(CORNER);  // Default rectMode is CORNER
-     fill(255, 0, 0);  // Set fill to white
-     rect(665, 418, 265, 45);
+    if(states.get(SHUTTER_MASK)){
+       rectMode(CORNER);  // Default rectMode is CORNER
+       fill(255, 0, 0);  // Set fill to white
+       rect(665, 418, 265, 45);
      
-     textSize(32);
-     fill(255);
-     text("SHUTTER OPEN", 675, 455);   
-  }
+       textSize(32);
+       fill(255);
+       text("SHUTTER OPEN", 675, 455);   
+    }
                 
-  if (states.get(THRESHOLD_MASK)){
-     rectMode(CORNER);  // Default rectMode is CORNER
-     fill(255, 0, 0);  // Set fill to white
-     rect(665, 465, 265, 45);
+    if(states.get(THRESHOLD_MASK)){
+       rectMode(CORNER);  // Default rectMode is CORNER
+       fill(255, 0, 0);  // Set fill to white
+       rect(665, 465, 265, 45);
      
-     textSize(32);
-     fill(255);
-     text("THRESHOLD ON", 675, 500); 
-  } 
-  // nothing changed in the state, so do not draw anthing
-  return;
+       textSize(32);
+       fill(255);
+       text("THRESHOLD ON", 675, 500); 
+    } 
+    // nothing changed in the state, so do not draw anthing
+    return;
+  }
 }
