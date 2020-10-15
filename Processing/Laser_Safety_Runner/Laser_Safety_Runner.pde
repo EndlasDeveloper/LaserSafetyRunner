@@ -25,12 +25,8 @@ final String DEFEAT_SAFETY_IMG = IMG_PATH + "defeat_safety.jpg";
 final String LASER_FIRE_IMG = IMG_PATH + "danger_prog.jpg";
 final String WARNING_IMG = IMG_PATH + "ready_2_fire_warning.jpg";
 final String FIBER_ERROR_IMG = IMG_PATH + "fiber_error.jpg";
-/// NO IMAGES FOR THESE YET
-final String THRESHOLD_IMG = "";
-final String SHUTTER_IMG = "";
-final String FAULT_IMG = "";
-final String SLEEP_IMG = "";
-final String PROGRAM_IMG = "";
+final String FAULT_IMG = IMG_PATH + "fault.jpg";
+final String SLEEP_IMG = IMG_PATH + "sleep.jpg";
 ////////////////////////////////////////////////////////////////////////////////
 
 // STATE MAP //
@@ -171,63 +167,52 @@ void parseInputState(int inputState){
  * Description: infinite loop method for continually checking the state of the system  
  */
 void loop() {
-  
-  // TODO: **** Ask Fernando whether the signage should say "Do no enter." or "Do not enter laser chamber." rather than "Do no enter when sign is displayed."
-  // ***** If the sign is being read, I am pretty sure it is currently being displayed?
+ 
   
   // if the input doesn't match the curr state
-  if(currState != inputState){ //<>//
+  if(currState != inputState){
     parseInputState(inputState);
     // set curr state to the input state
     currState = inputState;
     
     if(states.get(ESTOP_MASK)){
-      img = loadImage("../resources/estop_active.jpg");
-      draw();
+      img = loadImage(ESTOP_IMG);
       println("ESTOP");
       
     } else if(states.get(SAFETY_CIRCUIT_MASK)){
-      img = loadImage("../resources/safety_circiut_error.jpg");
-      draw();
+      img = loadImage(SAFETY_CIRCUIT_IMG);
       println("SAFETY_CIRCUIT");
       
     } else if(states.get(DEFEAT_SAFETY_MASK)){
-      img = loadImage("../resources/defeat_safety.jpg");
-      draw();
+      img = loadImage(DEFEAT_SAFETY_IMG);
       println("DEFEAT_SAFETY");
       
     } else if(states.get(LASER_FIRE_MASK)){ //sign needs to be designated if threshold is on or off in case pilot laser is fired
       if (states.get(THRESHOLD_MASK)){
          img = loadImage("../resources/pilot_laser.jpg");
          draw();
-         break;
+         println("LASER_FIRE");
       }              
       else
          img = loadImage("../resources/laser_fire.jpg");
-         draw();
-         break;
-      } 
-      println("LASER_FIRE");
+         draw(); 
+         println("LASER_FIRE");
       
     } else if(states.get(WARNING_MASK)){
-      img = loadImage("../resources/warning.jpg");
-      draw();
+      img = loadImage(WARNING_IMG);
       println("WARNING");
       
     } else if(states.get(FIBER_ERROR_MASK)){
-      img = loadImage("../resources/fiber_error.jpg");
-      draw();
+      img = loadImage(FIBER_ERROR_IMG);
       println("FIBER_ERROR");
       
     } else if(states.get(FAULT_MASK)){
-      img = loadImage("../resources/error.jpg");
-      draw();
+      img = loadImage(FAULT_IMG);
       println("FAULT");
       
     } else if(states.get(SLEEP_MASK)){
-      img = loadImage("../resources/sleep.jpg");
-      draw();
-      println("SLEEP");
+      img = loadImage(SLEEP_IMG);
+      println("SLEEP"); //<>//
       
       //Note: removed threshold, shutter, and program checks.
     } else { // TODO: consider whether this code block should throw an exception or is an acceptable possibility
