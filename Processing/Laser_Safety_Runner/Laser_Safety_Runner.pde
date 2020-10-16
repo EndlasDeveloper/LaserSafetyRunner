@@ -30,7 +30,7 @@ final String FAULT_IMG = IMG_PATH + "fault.jpg";
 final String SLEEP_IMG = IMG_PATH + "sleep.jpg";
 final String NO_LOAD_IMG = IMG_PATH + "noload.jpg";
 /// COMMUNICATION PORT FOR PROGRAM TO LOOK FOR AND OPEN ///
-final String COM_PORT = "COM6";
+final String COM_PORT = "COM5";
 ////////////////////////////////////////////////////////////////////////////////
 
 // GLOBAL OBJECTS
@@ -151,7 +151,7 @@ void loop() {
     currState = inputState;
     
     if(states.get(ESTOP_MASK)){
-      img = loadImage(ESTOP_IMG);
+      img = loadImage(ESTOP_IMG); //<>//
       println("ESTOP");
       
     } else if(states.get(SAFETY_CIRCUIT_MASK)){
