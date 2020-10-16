@@ -4,7 +4,7 @@ import processing.serial.*;
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTANTS
 // --------- BYTES EXPECTED IN BUFFER FOR STATE ----------------- //////////
-final int BUFFER_BYTES_TO_READ = 4;
+final int BUFFER_BYTES_TO_READ = 2;
 // --------- MASKS ------------------ ////////////////////////////////////// 
 final int ESTOP_MASK = 0b1;             // 00000000001 (1)
 final int SAFETY_CIRCUIT_MASK = 0b10;   // 00000000010 (2)
@@ -25,12 +25,14 @@ final String DEFEAT_SAFETY_IMG = IMG_PATH + "defeat_safety.jpg";
 final String LASER_FIRE_IMG = IMG_PATH + "danger_prog.jpg";
 final String WARNING_IMG = IMG_PATH + "ready_2_fire_warning.jpg";
 final String FIBER_ERROR_IMG = IMG_PATH + "fiber_error.jpg";
-/// NO IMAGES FOR THESE YET
+/// NO IMAGES FOR THESE YET /// 
 final String THRESHOLD_IMG = "";
 final String SHUTTER_IMG = "";
 final String FAULT_IMG = "";
 final String SLEEP_IMG = "";
 final String PROGRAM_IMG = "";
+/// COMMUNICATION PORT FOR PROGRAM TO LOOK FOR AND OPEN ///
+final String COM_PORT = "COM5";
 ////////////////////////////////////////////////////////////////////////////////
 
 // GLOBAL OBJECTS
@@ -42,7 +44,6 @@ HashMap<Integer, Boolean> states; // states hash table to store whether a state'
 int inputState = 1; // variable for holding direct serial inputs
 int currState = -1; // var for saving current state
 int serialCount = 0;
-byte[] serialInBuffer = new byte[BUFFER_BYTES_TO_READ];
 
 /*
  * Name: setup
@@ -50,34 +51,26 @@ byte[] serialInBuffer = new byte[BUFFER_BYTES_TO_READ];
  *              Sets default image and the size of said image before calling draw 
  */
 void setup() {
-  // no communication devices connected, so return
-  if(Serial.list().length == 0){
-    println("setup: no serial communication devices detected.");
-    return;
-  }
-  // make sure COM5 exists
-  boolean hasCOMPort = false;
+  // initialize window size for image rendering
+  size(960, 540);
+  // make sure COM_PORT exists
   for(String com : Serial.list()){
-    // println(com);
-    if(com.equals("COM5")){ // found COM5 so set flag
-      hasCOMPort = true; 
+    if(com.equals(COM_PORT)){ // found COM_PORT so initialize com port, buffer size, and the initial image to render
+      // open COM_PORT
+      myPort = new Serial(this, COM_PORT, 9600);
+      // sets number of bytes to read at a time
+      myPort.buffer(BUFFER_BYTES_TO_READ);
+      // define image dimensions
+      // set initial image to draw
+      img = loadImage(ESTOP_IMG); 
+      return;
     }
   }  
-  // return if no COM5
-  if(!hasCOMPort){
-   println("setup: Serial list doesn't contain COM5.");
-   return;
-  }
-  // open COM5
-  myPort = new Serial(this, "COM5", 9600);
-  
-  // sets number of bytes to read at a time
-  myPort.buffer(BUFFER_BYTES_TO_READ);
-  // define image dimensions
-  size(960, 540);
-  // set initial image to draw
-  img = loadImage(ESTOP_IMG);
-  // delay(1500);
+  // Didn't find the right communication port, so msg, available ports, and exit the program 
+  println("Laser_Safety_Runner.pde setup(): Serial list doesn't contain communication port " + COM_PORT);
+  for(String com: Serial.list())
+    println("Serial list: " + com);
+  exit();
 }
 
 /*
@@ -94,20 +87,19 @@ int parseBytes(byte[] bytes){
                 this method acts as the event listener for the serial port opened during initialization. 
 */
 void serialEvent(Serial myPort) {
-    // println("");
+  // get input state if enough bytes are in the buffer
+  if(myPort.available() >= 2) {  
     inputState = myPort.read();
-    // println("myPort.read() = " + inputState);
-    //if(inputState <= 512){
-    //  inputState <<= 1;
-    //} else {
-    //  inputState = 1;
-    //}
-    
-    println("");
-    println("int state: " + inputState);
-    println("binary state: " + binary(inputState));
-    println("serial event index:" + serialCount++);
-    println("");
+  } else { // not enough available bytes, so return
+   println("port.available() < 2");
+   return;
+  }
+  
+  // DEBUGGING CODE
+  println("int state: " + inputState);
+  println("binary state: " + binary(inputState));
+  println("serial event index:" + serialCount++);
+  println("");
 }
 
 /*
@@ -125,50 +117,28 @@ void draw() {
  */
 void parseInputState(int inputState){
     states = new HashMap();
-    // set local var
     // ESTOP
-    int s = inputState & ESTOP_MASK;
-    states.put(ESTOP_MASK, (s >= 1));
-    
+    states.put(ESTOP_MASK, ((inputState & ESTOP_MASK) >= 1));
     // SAFETY CIRCUIT
-    s = inputState & SAFETY_CIRCUIT_MASK;
-    states.put(SAFETY_CIRCUIT_MASK, (s >= 1));
-    
+    states.put(SAFETY_CIRCUIT_MASK, ((inputState & SAFETY_CIRCUIT_MASK) >= 1));
     // DEFEAT SAFETY
-    s = inputState & DEFEAT_SAFETY_MASK;
-    states.put(DEFEAT_SAFETY_MASK, (s >= 1));
-    
+    states.put(DEFEAT_SAFETY_MASK, ((inputState & DEFEAT_SAFETY_MASK) >= 1));
     // LASER FIRE
-    s = inputState & LASER_FIRE_MASK;
-    states.put(LASER_FIRE_MASK, (s >= 1));
-    
+    states.put(LASER_FIRE_MASK, ((inputState & LASER_FIRE_MASK) >= 1));
     // WARNING
-    s = inputState & WARNING_MASK;
-    states.put(WARNING_MASK, (s >= 1));
-    
+    states.put(WARNING_MASK, ((inputState & WARNING_MASK) >= 1));
     // FIBER ERROR
-    s = inputState & FIBER_ERROR_MASK;
-    states.put(FIBER_ERROR_MASK, (s >= 1));
-    
+    states.put(FIBER_ERROR_MASK, ((inputState & FIBER_ERROR_MASK) >= 1));
     // THRESHOLD
-    s = inputState & THRESHOLD_MASK;
-    states.put(THRESHOLD_MASK, (s >= 1));
-    
+    states.put(THRESHOLD_MASK, ((inputState & THRESHOLD_MASK) >= 1));
     // SHUTTER
-    s = inputState & SHUTTER_MASK;
-    states.put(SHUTTER_MASK, (s >= 1));
-    
+    states.put(SHUTTER_MASK, ((inputState & SHUTTER_MASK) >= 1));
     // FAULT
-    s = inputState & FAULT_MASK;
-    states.put(FAULT_MASK, (s >= 1));
-    
+    states.put(FAULT_MASK, ((inputState & FAULT_MASK) >= 1));  
     // SLEEP
-    s = inputState & SLEEP_MASK;
-    states.put(SLEEP_MASK, (s >= 1));
-    
+    states.put(SLEEP_MASK, ((inputState & SLEEP_MASK) >= 1));   
     // PROGRAM
-    s = inputState & PROGRAM_MASK;
-    states.put(PROGRAM_MASK, (s >= 1)); 
+    states.put(PROGRAM_MASK, ((inputState & PROGRAM_MASK) >= 1)); 
 }
 
 /*
@@ -187,38 +157,38 @@ void loop() {
     currState = inputState;
     
     if(states.get(ESTOP_MASK)){
-      img = loadImage("../resources/estop_active.jpg");
+      img = loadImage(ESTOP_IMG);
       println("ESTOP");
       
     } else if(states.get(SAFETY_CIRCUIT_MASK)){
-      img = loadImage("../resources/safety_circiut_error.jpg");
+      img = loadImage(SAFETY_CIRCUIT_IMG);
       println("SAFETY_CIRCUIT");
       
     } else if(states.get(DEFEAT_SAFETY_MASK)){
-      img = loadImage("../resources/defeat_safety.jpg");
+      img = loadImage(DEFEAT_SAFETY_IMG);
       println("DEFEAT_SAFETY");
       
     } else if(states.get(LASER_FIRE_MASK)){ //sign needs to be designated if threshold is on or off in case pilot laser is fired
       if (states.get(THRESHOLD_MASK))
-         img = loadImage("../resources/pilot_laser.jpg");               
+         img = loadImage(THRESHOLD_IMG);               
       else
-         img = loadImage("../resources/laser_fire.jpg");       
+         img = loadImage(LASER_FIRE_IMG);       
       println("LASER_FIRE");
       
     } else if(states.get(WARNING_MASK)){
-      img = loadImage("../resources/warning.jpg");
+      img = loadImage(WARNING_IMG);
       println("WARNING");
       
     } else if(states.get(FIBER_ERROR_MASK)){
-      img = loadImage("../resources/fiber_error.jpg");
+      img = loadImage(FIBER_ERROR_IMG);
       println("FIBER_ERROR");
       
     } else if(states.get(FAULT_MASK)){
-      img = loadImage("../resources/error.jpg");
+      img = loadImage(FAULT_IMG);
       println("FAULT");  
       
     } else if(states.get(SLEEP_MASK)){
-      img = loadImage("../resources/sleep.jpg");
+      img = loadImage(SLEEP_IMG);
       println("SLEEP");
       
       //Note: removed threshold, shutter, and program checks.
