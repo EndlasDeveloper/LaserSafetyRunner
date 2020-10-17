@@ -17,7 +17,10 @@ void setup()
   try { 
     port = new Serial(this, com, 9600);
     loop();
-  } catch(Exception ex){ continue; }
+  } catch(Exception ex){
+    println("Failed to open a port.\nMake sure there is an available port.");
+    continue;
+  }
  }
  // no open ports, so exit program
  exit();

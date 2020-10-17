@@ -3,31 +3,26 @@
                    This bit cycles through bits 0 through 7, disappears, then starts the cycle again at bit 0. This simulates
                    potential inputs for the Laser Safety Runner application.
  */
- 
 import processing.serial.*;
-
 byte[] bytesToWrite = {1, 0};
-Serial port; 
+Serial port;    // Create object from Serial class
+int val;        // Data received from the serial port
 
 void setup() 
 {
- // Just finds an available port and opens it
  for(String com : Serial.list()){
   // open COM_PORT
-  try { 
+  try {
     port = new Serial(this, com, 9600);
+    // sets number of bytes to read at a time
     loop();
-  } catch(Exception ex){
-    println("Failed to open a port.\nMake sure there is an available port.");
-    continue;
-  }
+  } catch(Exception ex){continue;}
  }
- // no open ports, so exit program
  exit();
 }
 
+
 void loop(){
-  // wait a second, then write the next byte package
   delay(1000);
   println("bytes to write[0]: " + binary(bytesToWrite[0]));
   port.write(bytesToWrite);
