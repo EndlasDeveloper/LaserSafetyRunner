@@ -35,7 +35,7 @@ final String COM_PORT = "COM5";
 
 // GLOBAL OBJECTS
 PImage img;                       // image object for setting an image file to for rendering
-Serial port;                    // Serial object for USB serial communications
+Serial port;                      // Serial object for USB serial communications
 HashMap<Integer, Boolean> states; // states hash table to store whether a state's bit was set or not
 
 // GLOBAL VARS
@@ -55,13 +55,18 @@ void setup() {
   for(String com : Serial.list()){
     if(com.equals(COM_PORT)){ // found COM_PORT so initialize com port, buffer size, and the initial image to render
       // open COM_PORT
-      port = new Serial(this, COM_PORT, 9600);
-      // sets number of bytes to read at a time
-      port.buffer(BUFFER_BYTES_TO_READ);
-      // define image dimensions
-      // set initial image to draw
-      img = loadImage(ESTOP_IMG); 
-      return;
+      try {
+        port = new Serial(this, COM_PORT, 9600);
+        // sets number of bytes to read at a time
+        port.buffer(BUFFER_BYTES_TO_READ);
+        // define image dimensions
+        // set initial image to draw
+        img = loadImage(ESTOP_IMG); 
+        return;
+      } catch(Exception ex){
+        println("Port " + COM_PORT + " failed to open. Port could be busy.");
+        exit();       
+      }
     }
   }  
   // Didn't find the right communication port, so msg, available ports, and exit the program 
