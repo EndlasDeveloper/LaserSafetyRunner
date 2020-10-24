@@ -1,4 +1,0 @@
-- It looks like Processing allows the user to export programs as a double-clickable 
-  executable that will automatically run the program. Because of this, if the application
-  runs correctly after being double-clicked, a script can be written to automatically execute
-  the application on startup. 
