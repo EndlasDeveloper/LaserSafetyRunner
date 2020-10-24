@@ -2,7 +2,7 @@
 #define NUMBER_OF_BYTES 5
 
 static const int DELAY = 1000;
-static uint8_t bytes[5] = {0b1, 0, 0, 0, 0b11110000};
+static uint8_t bytes[5] = {1, 0, 0, 0, 240};
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,11 +13,15 @@ void setup() {
 
 void loop() {
   Serial.write(bytes, 5);
-  if((bytes[0] << 1) <= 0)
-    bytes[0] = 0b1;
+  if(bytes[0] < 255)
+    bytes[0] *= 2;
   else
-    bytes[0] <<= 1;
-  delay(1000);
+    bytes[0] = 1;
+//  if((bytes[0] << 1) <= 0)
+//    bytes[0] = 1;
+//  else
+//    bytes[0] <<= 1;
+  delay(500);
 }
 
 void writeToSerial(){

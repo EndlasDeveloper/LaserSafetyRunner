@@ -29,11 +29,10 @@ if __name__ == '__main__':
         except serial.SerialException:
             print("Unable to open COM port: " + COM_PORT)
             exit(1)
-        byte_arr = [0, 0, 0, 0, 0]
         index = 0
+        byte_arr = ser.read(5)
         for b in byte_arr:
-            b = ser.read(1)
-            print("byte"+str(index)+": "+bin(int.from_bytes(b, byteorder=constants.ENDIAN, signed=False)))
+            print("byte" + str(index) + ": " + bin(b))
             index += 1
 
         print("\n")
