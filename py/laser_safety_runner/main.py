@@ -1,5 +1,9 @@
+####################################################################
+# main.py - implements the main entry point into the program
+####################################################################
 
 # imports
+import image_manip as manip
 from PIL import Image
 import serial
 
@@ -10,12 +14,7 @@ IMAGE_TO_SHOW = IMAGE_DIR + IMAGE_JPG
 COM_PORT = 'COM3'
 
 
-def display_image(image_str):
-    image = Image.open(image_str)
-    image.show()
-
-
-# Press the green button in the gutter to run the script.
+# int main()
 if __name__ == '__main__':
     try:
         ser = serial.Serial(port=COM_PORT, baudrate=9600, bytesize=8, timeout=2)
@@ -34,7 +33,7 @@ if __name__ == '__main__':
         input_byte4 = ser.read(1)
         print(bin(int.from_bytes(input_byte4, byteorder="big", signed=False)))
 
-        display_image(IMAGE_TO_SHOW)
+        manip.display_image(IMAGE_TO_SHOW)
 
     except serial.SerialException:
         print("Unable to open COM port: " + COM_PORT)
