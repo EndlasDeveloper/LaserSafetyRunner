@@ -4,19 +4,26 @@ import processing.serial.*;
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTANTS
 // --------- BYTES EXPECTED IN BUFFER FOR STATE ----------------- //////////
-final int BUFFER_BYTES_TO_READ = 2;
+final int BUFFER_BYTES_TO_READ = 5;
+final int BYTE_AT_A_TIME = 1;
 // --------- MASKS ------------------ ////////////////////////////////////// 
-final int ESTOP_MASK = 0b1;             // 00000000001 (1)
-final int SAFETY_CIRCUIT_MASK = 0b10;   // 00000000010 (2)
-final int DEFEAT_SAFETY_MASK = 0xb100;  // 00000000100 (4)
-final int LASER_FIRE_MASK = 0xb1000;    // 00000001000 (8)
-final int WARNING_MASK = 0b10000;       // 00000010000 (16)
-final int FIBER_ERROR_MASK = 0b100000;  // 00000100000 (32)
-final int THRESHOLD_MASK = 0b1000000;   // 00001000000 (64)
-final int SHUTTER_MASK = 0b10000000;    // 00010000000 (128)
-final int FAULT_MASK = 0b100000000;     // 00100000000 (256)
-final int SLEEP_MASK = 0b1000000000;    // 01000000000 (512)
-final int PROGRAM_MASK = 0b10000000000; // 10000000000 (1024)
+
+
+final int LASER_FIRE_MASK = 0b1;
+final int THRESHOLD_MASK = 0b10;
+final int SHUTTER_MASK = 0b100;
+final int PROGRAM_MASK = 0b1000;
+
+final int ESTOP_MASK = 0b100000000;
+final int SAFETY_CIRCUIT_MASK = 0b1000000000;
+final int DEFEAT_SAFETY_MASK = 0b10000000000;
+final int WARNING_MASK = 0b100000000000;
+
+final int FAULT_MASK = 0b10000000000000000;
+final int SLEEP_MASK = 0b100000000000000000;
+final int FIBER_ERROR_MASK = 0b1000000000000000000;
+
+
 // --------- IMAGES & PATH ------------ ///////////////////////////////////
 final String IMG_PATH = "../resources/";
 final String ESTOP_IMG = IMG_PATH + "estop_active.jpg";
@@ -37,11 +44,11 @@ final String COM_PORT = "COM5";
 PImage img;                       // image object for setting an image file to for rendering
 Serial port;                      // Serial object for USB serial communications
 HashMap<Integer, Boolean> states; // states hash table to store whether a state's bit was set or not
+byte bytes[];
 
 // GLOBAL VARS
-int inputState = 1; // variable for holding direct serial inputs
+int inputState = 0; // variable for holding direct serial inputs
 int currState = -1; // var for saving current state
-int serialCount = 0;
 
 /*
  * Name: setup
@@ -51,6 +58,11 @@ int serialCount = 0;
 void setup() {
   // initialize window size for image rendering
   size(960, 540);
+  bytes = new byte[5];
+  bytes[4] = (byte)240;
+  bytes[0] = 1;
+  inputState = parseBytes(bytes);
+
   // make sure COM_PORT exists
   for(String com : Serial.list()){
     if(com.equals(COM_PORT)){ // found COM_PORT so initialize com port, buffer size, and the initial image to render
@@ -58,7 +70,7 @@ void setup() {
       try {
         port = new Serial(this, COM_PORT, 9600);
         // sets number of bytes to read at a time
-        port.buffer(BUFFER_BYTES_TO_READ);
+        port.readBytesUntil(240, bytes);
         // define image dimensions
         // set initial image to draw
         img = loadImage(ESTOP_IMG); 
@@ -81,7 +93,9 @@ void setup() {
  * Description: Not sure if this method is needed, but returns an integer built up from 4 bytes
 */
 int parseBytes(byte[] bytes){
-  return bytes[0] + bytes[1] << 1 + bytes[2] << 2 +bytes[3] << 3;
+  if(bytes != null)
+    return bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 32);
+  return 0;
 }
 
 /*
@@ -89,20 +103,47 @@ int parseBytes(byte[] bytes){
  * Description: Needed method for listening to a serial port for input. After initializing up the buffer in setup,
                 this method acts as the event listener for the serial port opened during initialization. 
 */
-void serialEvent(Serial port) {
-  // get input state if enough bytes are in the buffer
-  if(port.available() >= 2) {  
-    inputState = port.read();
-  } else { // not enough available bytes, so return
-   println("port.available() < 2");
-   return;
+void serialEvent(Serial port) {  
+  if(port.available() >= 5) {
+    bytes = port.readBytes();
+    for(byte b : bytes){
+     b = (byte)(b ^ 0xFFFFFFFF);
+     println(binary(b));
+    }
+    //for(int i = 0; i < BUFFER_BYTES_TO_READ; i++)
+    // println("index " + i + ": " + binary(bytes[i]));
+    println("");
+    if(isValidInput()){
+      println("Input is valid");
+      inputState = parseBytes(bytes);
+    //int trimmedInput = (0xFFFFFF00 & inputState) >> 8;
+    //println("trimmed input: " + binary(trimmedInput));
+    } else {
+      println("Bad input"); }
   }
-  
-  // DEBUGGING CODE
-  println("int state: " + inputState);
-  println("binary state: " + binary(inputState));
-  println("serial event index:" + serialCount++);
-  println("");
+   //DEBUGGING CODE
+  //println("int state: " + inputState);
+  //println("binary state: " + binary(inputState));
+  //println("serial event index:" + serialCount++);
+  ////println("");
+}
+
+
+boolean isValidInput(){
+
+ // check if the last byte has the terminating header
+ if(Math.abs(bytes[BUFFER_BYTES_TO_READ - 1]) < 16) {
+   //println("Bad/No terminator byte");
+   return false;
+ }
+   
+ for(int i = 0; i < BUFFER_BYTES_TO_READ-1; i++){ // make sure data bytes have valid header portion
+   if(bytes[i] >= 16){
+     //println("Corrupt data byte");
+     return false;
+   }
+ }
+ return true; 
 }
 
 /*
@@ -118,30 +159,31 @@ void draw() {
  * Name: hashInputStates
  * Description: takes input state and hashes a boolean with each state's mask to indicate whether that state's bit was set
  */
-void parseInputState(int inputState){
+void hashInputState(int inputState){
     states = new HashMap();
+    
     // ESTOP
-    states.put(ESTOP_MASK, ((inputState & ESTOP_MASK) >= 1));
+    states.put(ESTOP_MASK, ((inputState & ESTOP_MASK) > 0));
     // SAFETY CIRCUIT
-    states.put(SAFETY_CIRCUIT_MASK, ((inputState & SAFETY_CIRCUIT_MASK) >= 1));
+    states.put(SAFETY_CIRCUIT_MASK, ((inputState & SAFETY_CIRCUIT_MASK) > 0));
     // DEFEAT SAFETY
-    states.put(DEFEAT_SAFETY_MASK, ((inputState & DEFEAT_SAFETY_MASK) >= 1));
+    states.put(DEFEAT_SAFETY_MASK, ((inputState & DEFEAT_SAFETY_MASK) > 0));
     // LASER FIRE
-    states.put(LASER_FIRE_MASK, ((inputState & LASER_FIRE_MASK) >= 1));
+    states.put(LASER_FIRE_MASK, ((inputState & LASER_FIRE_MASK) > 0));
     // WARNING
-    states.put(WARNING_MASK, ((inputState & WARNING_MASK) >= 1));
+    states.put(WARNING_MASK, ((inputState & WARNING_MASK) > 0));
     // FIBER ERROR
-    states.put(FIBER_ERROR_MASK, ((inputState & FIBER_ERROR_MASK) >= 1));
+    states.put(FIBER_ERROR_MASK, ((inputState & FIBER_ERROR_MASK) > 0));
     // THRESHOLD
-    states.put(THRESHOLD_MASK, ((inputState & THRESHOLD_MASK) >= 1));
+    states.put(THRESHOLD_MASK, ((inputState & THRESHOLD_MASK) > 0));
     // SHUTTER
-    states.put(SHUTTER_MASK, ((inputState & SHUTTER_MASK) >= 1));
+    states.put(SHUTTER_MASK, ((inputState & SHUTTER_MASK) > 0));
     // FAULT
-    states.put(FAULT_MASK, ((inputState & FAULT_MASK) >= 1));  
+    states.put(FAULT_MASK, ((inputState & FAULT_MASK) > 0));  
     // SLEEP
-    states.put(SLEEP_MASK, ((inputState & SLEEP_MASK) >= 1));   
+    states.put(SLEEP_MASK, ((inputState & SLEEP_MASK) > 0));   
     // PROGRAM
-    states.put(PROGRAM_MASK, ((inputState & PROGRAM_MASK) >= 1)); 
+    states.put(PROGRAM_MASK, ((inputState & PROGRAM_MASK) > 0)); 
 }
 
 /*
@@ -150,8 +192,9 @@ void parseInputState(int inputState){
  */
 void loop() {
   // if the input doesn't match the curr state
-  if(currState != inputState){
-    parseInputState(inputState);
+  if(isValidInput() && currState != inputState){
+    println("input state: " + binary(inputState));
+    hashInputState(inputState);
     // set curr state to the input state
     currState = inputState;
     
@@ -192,8 +235,8 @@ void loop() {
       
       //Note: removed threshold, shutter, and program checks.
     } else { // TODO: consider whether this code block should throw an exception or is an acceptable possibility
-      println("All flags in states map are false.");
-      println("state: " + currState);
+      //println("All flags in states map are false.");
+      //println("state: " + currState);
     }
     
     draw();
@@ -226,6 +269,7 @@ void loop() {
        fill(255);
        text("THRESHOLD ON", 675, 500); 
     } 
+    draw();  
     // nothing changed in the state, so do not draw anthing
     return;
   }
