@@ -39,25 +39,9 @@ void checkIfPiIsReady(){
 
 static uint32_t index = 0;
 void writeToSerial(){
-//  byte * bytesToWrite = new byte[5];
-//  if(numWrites % 2 == 0){
-//    bytesToWrite[0] = byte(255);
-//    bytesToWrite[1] = byte(255);
-//    bytesToWrite[2] = byte(255);
-//    bytesToWrite[3] = byte(255);
-//    bytesToWrite[4] = byte(240);
-//  }
-//  else {
-//    bytesToWrite[0] = byte(0);
-//    bytesToWrite[1] = byte(0);
-//    bytesToWrite[2] = byte(0);
-//    bytesToWrite[3] = byte(0);
-//    bytesToWrite[4] = byte(240);
-//  }
-
   Serial.write(bytesToWrite,5);
 
-  if(bytesToWrite[index] <= 8){
+  if(bytesToWrite[index] < 8){
     bytesToWrite[index] <<= 1;
   }else if(index == 0){
     bytesToWrite[index] = 0;

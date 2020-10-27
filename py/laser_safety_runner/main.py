@@ -10,10 +10,7 @@ import constants as c
 
 # file constants
 DEFAULT_IMG = c.NO_LOAD_IMG
-COM_PORT = "COM5"
-BAUD_RATE = 115200
-BYTE_SIZE = 8
-SERIAL_TIMEOUT = 2
+
 
 # flag so we don't try and open a port twice
 is_com_port_open = False
@@ -27,7 +24,7 @@ if __name__ == '__main__':
         # try and open the serial port if we haven't done so already
         if is_com_port_open is False:
             try:
-                ser = serial.Serial(port=COM_PORT, baudrate=BAUD_RATE, bytesize=BYTE_SIZE, timeout=SERIAL_TIMEOUT)
+                ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE, timeout=c.SERIAL_TIMEOUT)
                 ser.write(b'\x80')
                 ser.flushInput()
                 reply = ser.read()
@@ -37,7 +34,7 @@ if __name__ == '__main__':
                 if reply == 255:
                     is_com_port_open = True
             except serial.SerialException:
-                print("Unable to open COM port: " + COM_PORT)
+                print("Unable to open COM port: " + c.COM_PORT)
 
         elif is_com_port_open is True:
             index = 0
