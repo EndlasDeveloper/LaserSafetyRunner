@@ -20,21 +20,26 @@ isInit = True
 # int main()
 if __name__ == '__main__':
     # void loop()
+    ser = ""
+    num_loops = 0
     while True:
         # try and open the serial port if we haven't done so already
         try:
             if isInit is True:
-                isInit = False
                 ser = serial.Serial(port=COM_PORT, baudrate=9600, bytesize=8, timeout=2)
+                isInit = False
+
+        except serial.SerialException:
+            if num_loops % 10000 == 0:
+                print("Unable to open COM port: " + COM_PORT)
+            if isInit is False:
                 index = 0
                 byte_arr = ser.read(5)
                 for b in byte_arr:
                     print("byte" + str(index) + ": " + bin(b))
                     index += 1
-        except serial.SerialException:
-            print("Unable to open COM port: " + COM_PORT)
-
-        print("\n")
+                print("\n")
+            num_loops += 1
         # manip.display_image(IMAGE_TO_SHOW)
 
 
