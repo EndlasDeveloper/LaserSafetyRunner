@@ -3,14 +3,12 @@
 ####################################################################
 
 # imports
-from typing import Optional
-from bitstring import *
 import image_manip as i_manip
 import byte_manip as b_manip
 import serial
 import constants as c
 
-# constants
+# file constants
 IMAGE_TO_SHOW = c.FAULT_IMG
 COM_PORT = "COM5"
 BAUD_RATE = 115200
@@ -19,7 +17,7 @@ SERIAL_TIMEOUT = 2
 ENDIAN = "big"
 
 # flag so we don't try and open a port twice
-isInit = True
+is_com_port_open = False
 
 # int main()
 if __name__ == '__main__':
@@ -28,7 +26,7 @@ if __name__ == '__main__':
     img = IMAGE_TO_SHOW
     while True:
         # try and open the serial port if we haven't done so already
-        if isInit is True:
+        if is_com_port_open is False:
             try:
                 ser = serial.Serial(port=COM_PORT, baudrate=BAUD_RATE, bytesize=BYTE_SIZE, timeout=SERIAL_TIMEOUT)
                 ser.write(b'\x80')
@@ -38,11 +36,11 @@ if __name__ == '__main__':
                 reply = int.from_bytes(reply, ENDIAN, signed=False)
                 print(reply)
                 if reply == 255:
-                    isInit = False
+                    is_com_port_open = True
 
             except serial.SerialException:
                 print("Unable to open COM port: " + COM_PORT)
-        elif isInit is False:
+        elif is_com_port_open is True:
             index = 0
             ser.flushInput()
             byte_arr = ser.read(5)
@@ -53,7 +51,7 @@ if __name__ == '__main__':
                 print("byte{0}: {1}".format(str(index), (int(b))))
                 index += 1
             print("\n")
-        i_manip.display_image(img)
+        # i_manip.display_image(img)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

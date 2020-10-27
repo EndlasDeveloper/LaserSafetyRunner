@@ -57,7 +57,7 @@ void writeToSerial(){
 
   Serial.write(bytesToWrite,5);
 
-  if(bytesToWrite[index] < 16){
+  if(bytesToWrite[index] <= 8){
     bytesToWrite[index] <<= 1;
   }else if(index == 0){
     bytesToWrite[index] = 0;
