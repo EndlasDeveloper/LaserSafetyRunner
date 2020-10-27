@@ -13,6 +13,11 @@ def byte_arr_to_int(byte_arr):
     return byte_arr[0] | (byte_arr[1] << 4) | (byte_arr[2] << 8) | (byte_arr[3] << 12)
 
 
+#######################################################################################
+# Name: is_input_valid
+# Description: takes a byte array as a parameter. Method returns whether the byte arr
+#              input is a valid input or not as a bool
+#######################################################################################
 def is_input_valid(input_byte_arr):
     if input_byte_arr[0] >= 16 or input_byte_arr[1] >= 16 or input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16:
         return False
@@ -21,6 +26,11 @@ def is_input_valid(input_byte_arr):
     return True
 
 
+#######################################################################################
+# Name: get_display_image_path
+# Description: takes an integer as a parameter. Method returns the appropriate image
+#              path as a string.
+#######################################################################################
 def get_display_image_path(input_int):
     if c.LASER_FIRE_MASK & input_int != 0:
         return c.LASER_FIRE_IMG
