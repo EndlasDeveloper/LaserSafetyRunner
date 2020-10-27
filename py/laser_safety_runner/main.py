@@ -6,6 +6,7 @@
 import byte_manip as b_manip
 import serial
 import constants as c
+import pygame
 
 # default image path
 DEFAULT_IMG = c.NO_LOAD_IMG
@@ -17,6 +18,17 @@ is_com_port_open = False
 if __name__ == '__main__':
     ser = ""
     img = DEFAULT_IMG
+    pygame.init()
+
+    display_width = 1800
+    display_height = 1600
+
+    game_display = pygame.display.set_mode((display_width, display_height))
+    pygame.display.set_caption('LASER SAFETY RUNNER')
+    clock = pygame.time.Clock()
+    py_img = pygame.image.load(img)
+    py_img_last = py_img
+
     # void loop()
     while True:
         # try and open the serial port if we haven't done so already
@@ -33,7 +45,8 @@ if __name__ == '__main__':
                     is_com_port_open = True
             except serial.SerialException:
                 print("Unable to open COM port: " + c.COM_PORT)
-
+                pygame.quit()
+                exit()
         elif is_com_port_open is True:
             index = 0
             ser.flushInput()
@@ -47,10 +60,11 @@ if __name__ == '__main__':
                 print("\n")
             else:
                 print("invalid input\n")
-        # i_manip.display_image(img)
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        py_img = pygame.image.load(img)
+        if py_img != py_img_last:
+            game_display.fill((0, 0, 0))
+            game_display.blit(py_img, (0, 0))
+            pygame.display.update()
 
 
 
