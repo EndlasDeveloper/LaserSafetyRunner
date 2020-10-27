@@ -3,23 +3,21 @@
 ####################################################################
 
 # imports
-import image_manip as i_manip
 import byte_manip as b_manip
 import serial
 import constants as c
 
-# file constants
+# default image path
 DEFAULT_IMG = c.NO_LOAD_IMG
-
 
 # flag so we don't try and open a port twice
 is_com_port_open = False
 
 # int main()
 if __name__ == '__main__':
-    # void loop()
     ser = ""
     img = DEFAULT_IMG
+    # void loop()
     while True:
         # try and open the serial port if we haven't done so already
         if is_com_port_open is False:
@@ -41,12 +39,14 @@ if __name__ == '__main__':
             ser.flushInput()
             byte_arr = ser.read(5)
             ser.flushInput()
-            b_manip.is_input_valid(byte_arr)
-            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
-            for b in byte_arr:
-                print("byte{0}: {1}".format(str(index), (int(b))))
-                index += 1
-            print("\n")
+            if b_manip.is_input_valid(byte_arr):
+                img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
+                for b in byte_arr:
+                    print("byte{0}: {1}".format(str(index), (int(b))))
+                    index += 1
+                print("\n")
+            else:
+                print("invalid input\n")
         # i_manip.display_image(img)
 
 

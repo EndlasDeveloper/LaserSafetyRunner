@@ -19,7 +19,8 @@ def byte_arr_to_int(byte_arr):
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
-    if input_byte_arr[0] >= 16 or input_byte_arr[1] >= 16 or input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16:
+    if input_byte_arr[0] >= 16 or input_byte_arr[1] >= 16 or\
+            input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16:
         return False
     if input_byte_arr[4] < 16:
         return False
@@ -32,27 +33,44 @@ def is_input_valid(input_byte_arr):
 #              path as a string.
 #######################################################################################
 def get_display_image_path(input_int):
-    if c.LASER_FIRE_MASK & input_int != 0:
+    states = hash_state(input_int)
+    if states[c.LASER_FIRE_MASK] is True:
         return c.LASER_FIRE_IMG
-    elif c.THRESHOLD_MASK & input_int != 0:
+    elif states[c.THRESHOLD_MASK] is True:
         return c.LASER_FIRE_IMG
-    elif c.SHUTTER_MASK & input_int != 0:
+    elif states[c.SHUTTER_MASK] is True:
         return c.LASER_FIRE_IMG
-    elif c.PROGRAM_MASK & input_int != 0:
+    elif states[c.PROGRAM_MASK] is True:
         return c.LASER_FIRE_IMG
-    elif c.ESTOP_MASK & input_int != 0:
+    elif states[c.ESTOP_MASK] is True:
         return c.ESTOP_IMG
-    elif c.SAFETY_CIRCUIT_MASK & input_int != 0:
+    elif states[c.SAFETY_CIRCUIT_MASK] is True:
         return c.SAFETY_CIRCUIT_IMG
-    elif c.DEFEAT_SAFETY_MASK & input_int != 0:
+    elif states[c.DEFEAT_SAFETY_MASK] is True:
         return c.DEFEAT_SAFETY_IMG
-    elif c.WARNING_MASK & input_int != 0:
+    elif states[c.WARNING_MASK] is True:
         return c.WARNING_IMG
-    elif c.FAULT_MASK & input_int != 0:
+    elif states[c.FAULT_MASK] is True:
         return c.FAULT_IMG
-    elif c.SLEEP_MASK & input_int != 0:
+    elif states[c.SLEEP_MASK] is True:
         return c.SLEEP_IMG
-    elif c.FIBER_ERROR_MASK & input_int != 0:
+    elif states[c.FIBER_ERROR_MASK] is True:
         return c.FIBER_ERROR_IMG
     else:
         return c.NO_LOAD_IMG
+
+
+######################################################################################
+# Name: hash_state
+# Description: maps the state mask to a bool indicating whether the bit for that mask
+#              was set.
+######################################################################################
+def hash_state(state):
+    hashed_states = {c.LASER_FIRE_MASK: (state & c.LASER_FIRE_MASK) > 0,
+                     c.THRESHOLD_MASK: (state & c.THRESHOLD_MASK) > 0, c.SHUTTER_MASK: (state & c.SHUTTER_MASK) > 0,
+                     c.PROGRAM_MASK: (state & c.PROGRAM_MASK) > 0, c.ESTOP_MASK: (state & c.ESTOP_MASK) > 0,
+                     c.SAFETY_CIRCUIT_MASK: (state & c.SAFETY_CIRCUIT_MASK) > 0,
+                     c.DEFEAT_SAFETY_MASK: (state & c.DEFEAT_SAFETY_MASK) > 0,
+                     c.WARNING_MASK: (state & c.WARNING_MASK) > 0, c.FAULT_MASK: (state & c.FAULT_MASK) > 0,
+                     c.SLEEP_MASK: (state & c.SLEEP_MASK) > 0, c.FIBER_ERROR_MASK: (state & c.FIBER_ERROR_MASK) > 0}
+    return hashed_states
