@@ -1,32 +1,80 @@
 #define MAGIC_BYTE 15
 #define NUMBER_OF_BYTES 5
+#define HANDSHAKE 0xFF
+#define BAUD_RATE 115200
 
-static const int DELAY = 1000;
-static uint8_t bytes[5] = {1, 0, 0, 0, 240};
+static const int DELAY = 1500;
+static uint8_t bytesToWrite[5] = {1, 0, 0, 0, 240};
+static bool isPiReady = false;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200); 
+  Serial.begin(BAUD_RATE); 
   while (!Serial) {} // wait for serial port to connect
 
 }
 
-void loop() {
-  Serial.write(bytes, 5);
-  if(bytes[0] < 255)
-    bytes[0] *= 2;
-  else
-    bytes[0] = 1;
-//  if((bytes[0] << 1) <= 0)
-//    bytes[0] = 1;
-//  else
-//    bytes[0] <<= 1;
-  delay(500);
+static uint32_t numChecks = 0;
+void checkIfPiIsReady(){
+  if(Serial) {
+    Serial.write(HANDSHAKE);
+    byte reply = Serial.read();
+    Serial.print(reply);
+    if(reply != 0) {
+      isPiReady = true;
+      delay(DELAY);
+    }
+  }
+}
+  
+  void loop() {
+  if(!isPiReady) {
+    checkIfPiIsReady();
+  } else {
+    writeToSerial();
+    delay(DELAY);
+  }
+  delay(DELAY / 4);
 }
 
+static uint32_t index = 0;
 void writeToSerial(){
-  // Serial.write(1);
+//  byte * bytesToWrite = new byte[5];
+//  if(numWrites % 2 == 0){
+//    bytesToWrite[0] = byte(255);
+//    bytesToWrite[1] = byte(255);
+//    bytesToWrite[2] = byte(255);
+//    bytesToWrite[3] = byte(255);
+//    bytesToWrite[4] = byte(240);
+//  }
+//  else {
+//    bytesToWrite[0] = byte(0);
+//    bytesToWrite[1] = byte(0);
+//    bytesToWrite[2] = byte(0);
+//    bytesToWrite[3] = byte(0);
+//    bytesToWrite[4] = byte(240);
+//  }
 
-    Serial.write(bytes,5);
-    
+  Serial.write(bytesToWrite,5);
+
+  if(bytesToWrite[index] < 16){
+    bytesToWrite[index] <<= 1;
+  }else if(index == 0){
+    bytesToWrite[index] = 0;
+    index++;
+    bytesToWrite[index] = 1;
+  } else if(index == 1) {
+    bytesToWrite[index] = 0;
+    index++;
+    bytesToWrite[index] = 1;
+  } else if(index == 2) {
+    bytesToWrite[index] = 0;
+    index++;
+    bytesToWrite[index] = 1;
+  }else if(index == 3) {
+    bytesToWrite[index] = 0;
+    index = 0;
+    bytesToWrite[index] = 1;
+  }
+  bytesToWrite[4] = 240;
 }

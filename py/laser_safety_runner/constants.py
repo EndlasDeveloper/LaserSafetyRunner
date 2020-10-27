@@ -23,7 +23,7 @@ SLEEP_MASK = 0b100000000000000000
 FIBER_ERROR_MASK = 0b1000000000000000000
 
 # IMAGE FILES AND PATH
-IMG_PATH = "../resources/"
+IMG_PATH = "resources/"
 ESTOP_IMG = IMG_PATH + "estop_active.jpg"
 SAFETY_CIRCUIT_IMG = IMG_PATH + "safety_circuit_error.jpg"
 DEFEAT_SAFETY_IMG = IMG_PATH + "defeat_safety.jpg"

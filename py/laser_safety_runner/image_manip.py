@@ -3,7 +3,7 @@
 ###########################################################################
 
 # imports
-from main import *
+from PIL import Image
 
 
 ############################################################################################
@@ -12,5 +12,6 @@ from main import *
 #              and uses Image library functions to open the image file and show it
 ############################################################################################
 def display_image(image_path_str):
+
     image = Image.open(image_path_str)
     image.show()
