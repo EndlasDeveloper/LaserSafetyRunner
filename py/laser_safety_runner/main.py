@@ -26,14 +26,13 @@ if __name__ == '__main__':
             if isInit is True:
                 isInit = False
                 ser = serial.Serial(port=COM_PORT, baudrate=9600, bytesize=8, timeout=2)
+                index = 0
+                byte_arr = ser.read(5)
+                for b in byte_arr:
+                    print("byte" + str(index) + ": " + bin(b))
+                    index += 1
         except serial.SerialException:
             print("Unable to open COM port: " + COM_PORT)
-            exit(1)
-        index = 0
-        byte_arr = ser.read(5)
-        for b in byte_arr:
-            print("byte" + str(index) + ": " + bin(b))
-            index += 1
 
         print("\n")
         # manip.display_image(IMAGE_TO_SHOW)
