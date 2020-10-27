@@ -9,12 +9,11 @@ import serial
 import constants as c
 
 # file constants
-IMAGE_TO_SHOW = c.FAULT_IMG
+DEFAULT_IMG = c.NO_LOAD_IMG
 COM_PORT = "COM5"
 BAUD_RATE = 115200
 BYTE_SIZE = 8
 SERIAL_TIMEOUT = 2
-ENDIAN = "big"
 
 # flag so we don't try and open a port twice
 is_com_port_open = False
@@ -23,7 +22,7 @@ is_com_port_open = False
 if __name__ == '__main__':
     # void loop()
     ser = ""
-    img = IMAGE_TO_SHOW
+    img = DEFAULT_IMG
     while True:
         # try and open the serial port if we haven't done so already
         if is_com_port_open is False:
@@ -33,20 +32,20 @@ if __name__ == '__main__':
                 ser.flushInput()
                 reply = ser.read()
                 ser.flushInput()
-                reply = int.from_bytes(reply, ENDIAN, signed=False)
-                print(reply)
+                reply = int.from_bytes(reply, c.ENDIAN, signed=False)
+                # print(reply) should be 255
                 if reply == 255:
                     is_com_port_open = True
-
             except serial.SerialException:
                 print("Unable to open COM port: " + COM_PORT)
+
         elif is_com_port_open is True:
             index = 0
             ser.flushInput()
             byte_arr = ser.read(5)
             ser.flushInput()
             b_manip.is_input_valid(byte_arr)
-            img = b_manip.get_display_image_path(byte_arr)
+            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
             for b in byte_arr:
                 print("byte{0}: {1}".format(str(index), (int(b))))
                 index += 1
