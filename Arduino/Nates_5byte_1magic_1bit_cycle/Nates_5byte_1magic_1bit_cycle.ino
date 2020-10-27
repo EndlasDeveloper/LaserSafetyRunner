@@ -1,4 +1,4 @@
-#define MAGIC_BYTE 15
+#define MAGIC_BYTE 240
 #define NUMBER_OF_BYTES 5
 #define HANDSHAKE 0xFF
 #define BAUD_RATE 115200
@@ -60,5 +60,5 @@ void writeToSerial(){
     index = 0;
     bytesToWrite[index] = 1;
   }
-  bytesToWrite[4] = 240;
+  bytesToWrite[4] = MAGIC_BYTE;
 }
