@@ -21,7 +21,7 @@ DEFAULT_IMG = c.NO_LOAD_IMG
 #########################################################################
 def run_debug_prints_for_inputs(byte_arr):
     i = 0
-    for b in byte_arr:  # debug
+    for b in byte_arr:  # print the bytes as integers
         print("byte{0}: {1}".format(str(i), (int(b))))
         i += 1
     print("\n")
