@@ -121,6 +121,16 @@ class ByteManipTestsGetDisplayImagePath(unittest.TestCase):
         result_img_path = get_display_image_path(2048)
         self.assertEqual(c.WARNING_IMG, result_img_path)
 
+    def test_get_display_image_path_byte_two(self):
+        result_img_path = get_display_image_path(65536)
+        self.assertEqual(c.FAULT_IMG, result_img_path)
+
+        result_img_path = get_display_image_path(131072)
+        self.assertEqual(c.SLEEP_IMG, result_img_path)
+
+        result_img_path = get_display_image_path(262144)
+        self.assertEqual(c.FIBER_ERROR_IMG, result_img_path)
+
 
 # int main()
 if __name__ == '__main__':

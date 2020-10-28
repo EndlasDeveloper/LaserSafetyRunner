@@ -33,7 +33,7 @@ def is_input_valid(input_byte_arr):
 #              path as a string.
 #######################################################################################
 def get_display_image_path(input_int):
-    states = hash_state(input_int)
+    states = hash_state(trim_input(input_int))
     if states[c.LASER_FIRE_MASK] is True:
         return c.LASER_FIRE_IMG
     elif states[c.THRESHOLD_MASK] is True:
@@ -59,6 +59,10 @@ def get_display_image_path(input_int):
     else:
         return c.NO_LOAD_IMG
 
+
+def trim_input(input_int):
+    mask = 0b111111111111111111111111
+    return mask & input_int
 
 ######################################################################################
 # Name: hash_state
