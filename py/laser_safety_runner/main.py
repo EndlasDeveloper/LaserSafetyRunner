@@ -7,6 +7,7 @@ import byte_manip as b_manip
 import serial
 import constants as c
 import pygame
+from pygame.locals import *
 
 # default image path
 DEFAULT_IMG = c.NO_LOAD_IMG
@@ -20,10 +21,9 @@ if __name__ == '__main__':
     img = DEFAULT_IMG
     pygame.init()
 
-    display_width = 1800
-    display_height = 1600
-
-    game_display = pygame.display.set_mode((display_width, display_height))
+    display_width = 640
+    display_height = 480
+    game_display = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
     clock = pygame.time.Clock()
     py_img = pygame.image.load(img)
@@ -31,6 +31,11 @@ if __name__ == '__main__':
 
     # void loop()
     while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+            else:
+                continue
         # try and open the serial port if we haven't done so already
         if is_com_port_open is False:
             try:
@@ -39,9 +44,9 @@ if __name__ == '__main__':
                 ser.flushInput()
                 reply = ser.read()
                 ser.flushInput()
-                reply = int.from_bytes(reply, c.ENDIAN, signed=False)
+                response = int.from_bytes(reply, c.ENDIAN, signed=False)
                 # print(reply) should be 255
-                if reply == 255:
+                if response == 255:
                     is_com_port_open = True
             except serial.SerialException:
                 print("Unable to open COM port: " + c.COM_PORT)

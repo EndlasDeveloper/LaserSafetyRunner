@@ -10,7 +10,12 @@ import constants as c
 #              positions in an integer. That integer is returned.
 #######################################################################################
 def byte_arr_to_int(byte_arr):
-    return byte_arr[0] | (byte_arr[1] << 4) | (byte_arr[2] << 8) | (byte_arr[3] << 12)
+    mask = 0b1111
+    b0 = int(mask & byte_arr[0])
+    b1 = int((mask & byte_arr[1]) << 4)
+    b2 = int((mask & byte_arr[2]) << 8)
+    b3 = int((mask & byte_arr[3]) << 12)
+    return b0 | b1 | b2 | b3
 
 
 #######################################################################################
