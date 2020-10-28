@@ -37,7 +37,7 @@ FIBER_ERROR_IMG = IMG_PATH + "fiber_error.jpg"
 FAULT_IMG = IMG_PATH + "fault.jpg"
 SLEEP_IMG = IMG_PATH + "sleep.jpg"
 NO_LOAD_IMG = IMG_PATH + "no_load.jpg"
-
+WAITING_ON_INPUT_IMG = IMG_PATH + "waiting_for_input_device.jpg"
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
 

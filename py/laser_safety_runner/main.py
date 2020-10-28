@@ -12,23 +12,32 @@ from pygame.locals import *
 # default image path to no-load
 DEFAULT_IMG = c.NO_LOAD_IMG
 
-# flag so we don't try and open a port twice
-is_com_port_open = False
 
-# int main()
-if __name__ == '__main__':
+def display_no_input_device():
+    pass
+
+
+def main(num_loops, game_display, is_pygame_init):
+    # flag so we don't try and open a port twice
+    is_com_port_open = False
     # init vars
     ser = ""
     img = DEFAULT_IMG
     # initialize pygame
     pygame.init()
-
-    game_display = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
-    py_img = pygame.image.load(img)
-    rect = py_img.get_rect(width=570, height=432)
-    py_img_last = py_img
+    if is_com_port_open is False:
+        if num_loops % 10000 == 0:
+            game_display.fill(c.SKY_BLUE)
+            font = pygame.font.Font('freesansbold.ttf', 32)
+            text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
+            text_rect = text.get_rect(center=(c.DISPLAY_WIDTH / 2.0, c.DISPLAY_HEIGHT / 2.0))
+            game_display.blit(text, text_rect)
+            # render changes
+            pygame.display.update()
 
+    py_img = pygame.image.load(c.WAITING_ON_INPUT_IMG)
+    py_img_last = py_img
     # void loop()
     while True:
         # must handle events in some way
@@ -55,10 +64,8 @@ if __name__ == '__main__':
             #  port failed to open
             except serial.SerialException:
                 print("Unable to open COM port: " + c.COM_PORT)
-                # stop pygame thread
-                pygame.quit()
-                # stop the program
-                exit()
+                main(num_loops+1, game_display, True)
+                return
         # successful port open, so start loop
         elif is_com_port_open is True:
             index = 0
@@ -93,6 +100,6 @@ if __name__ == '__main__':
             pygame.display.update()
 
 
-
-
-
+# int main()
+if __name__ == '__main__':
+    main(10000, pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN), False)
