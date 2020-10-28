@@ -17,7 +17,7 @@ def display_no_input_device():
     pass
 
 
-def main(num_loops, game_display, is_pygame_init):
+def main(num_loops, canvas, is_pygame_init):
     # flag so we don't try and open a port twice
     is_com_port_open = False
     # init vars
@@ -28,11 +28,11 @@ def main(num_loops, game_display, is_pygame_init):
     pygame.display.set_caption('LASER SAFETY RUNNER')
     if is_com_port_open is False:
         if num_loops % 10000 == 0:
-            game_display.fill(c.SKY_BLUE)
+            canvas.fill(c.SKY_BLUE)
             font = pygame.font.Font('freesansbold.ttf', 32)
             text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
             text_rect = text.get_rect(center=(c.DISPLAY_WIDTH / 2.0, c.DISPLAY_HEIGHT / 2.0))
-            game_display.blit(text, text_rect)
+            canvas.blit(text, text_rect)
             # render changes
             pygame.display.update()
     py_img_last = ""
@@ -91,9 +91,9 @@ def main(num_loops, game_display, is_pygame_init):
         if py_img != py_img_last:
             py_img_last = py_img
             # background color
-            game_display.fill(c.BLACK)
+            canvas.fill(c.BLACK)
             # draw image
-            game_display.blit(py_img, rect)
+            canvas.blit(py_img, rect)
             # render changes
             pygame.display.update()
 
