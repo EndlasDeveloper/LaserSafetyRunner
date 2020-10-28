@@ -68,7 +68,10 @@ def main(num_loops, canvas, is_pygame_init):
             i = 0
             ser.flushInput()
             # read input from arduino
-            byte_arr = ser.read(5)
+            try:
+                byte_arr = ser.read(5)
+            except serial.serialutil.SerialException:
+                is_com_port_open = False
             ser.flushInput()
             # make sure input is valid
             if b_manip.is_input_valid(byte_arr):
@@ -100,7 +103,7 @@ def main(num_loops, canvas, is_pygame_init):
 
 # int main()
 if __name__ == '__main__':
-    val = 9999
+    val = 99999
     index = 1
     canvas = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
     main(val + index, canvas, False)
