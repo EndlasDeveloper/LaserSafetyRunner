@@ -78,11 +78,12 @@ if __name__ == '__main__':
                 print("invalid input\n")
         # load image with pygame
         py_img = pygame.image.load(img)
+        py_img = pygame.transform.scale(py_img, (int(0.95 * c.DISPLAY_WIDTH), int(0.95 * c.DISPLAY_HEIGHT)))
         rect = py_img.get_rect()
-        py_img = pygame.transform.scale(py_img, (c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT))
+        rect = rect.move(int(0.05 * c.DISPLAY_WIDTH / 2), int(0.05 * c.DISPLAY_HEIGHT / 2))
         # only update UI if image path changed
         if py_img != py_img_last:
-            game_display.fill((0, 0, 0))
+            game_display.fill(c.SKY_BLUE)
             game_display.blit(py_img, rect)
             pygame.display.update()
 
