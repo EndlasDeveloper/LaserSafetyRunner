@@ -78,13 +78,18 @@ if __name__ == '__main__':
                 print("invalid input\n")
         # load image with pygame
         py_img = pygame.image.load(img)
+        # scale image to 95% of screen wid and hit
         py_img = pygame.transform.scale(py_img, (int(0.95 * c.DISPLAY_WIDTH), int(0.95 * c.DISPLAY_HEIGHT)))
         rect = py_img.get_rect()
+        # recenter rectangle so there is an even amount of border on each side
         rect = rect.move(int(0.05 * c.DISPLAY_WIDTH / 2), int(0.05 * c.DISPLAY_HEIGHT / 2))
         # only update UI if image path changed
         if py_img != py_img_last:
+            # background color
             game_display.fill(c.SKY_BLUE)
+            # draw image
             game_display.blit(py_img, rect)
+            # render changes
             pygame.display.update()
 
 
