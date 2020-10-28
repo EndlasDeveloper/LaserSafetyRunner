@@ -14,6 +14,16 @@ from pygame.locals import *
 DEFAULT_IMG = c.NO_LOAD_IMG
 
 
+#########################################################################
+# Name: setup_pygame_events
+# Description: sets up the pygame event handlers
+#########################################################################
+def setup_pygame_events():
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            c.is_com_port_open = False
+
+
 #######################################################################
 # Name: loop
 # Description: main function body to be looped through
@@ -21,15 +31,10 @@ DEFAULT_IMG = c.NO_LOAD_IMG
 def loop(canvas):
     # init vars
     img = DEFAULT_IMG
-
     # must handle events in some way
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            c.is_com_port_open = False
-        else:
-            continue
-    # try and open the serial port if we haven't done so already
-    if c.is_com_port_open is False:
+    setup_pygame_events()
+    # ports not open yet, so try to open, sent a call, and wait for a response
+    if not c.is_com_port_open:
         try:
             # open usb port
             c.ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE,
@@ -46,7 +51,6 @@ def loop(canvas):
         #  port failed to open
         except serial.SerialException:
             c.is_com_port_open = False
-            return
     # successful port open, so start loop
     if c.is_com_port_open is True:
         i = 0
@@ -54,6 +58,7 @@ def loop(canvas):
         try:
             c.ser.flushInput()
             byte_arr = c.ser.read(5)
+            
         except serial.serialutil.SerialException:
             print("SerialException")
             c.is_com_port_open = False
