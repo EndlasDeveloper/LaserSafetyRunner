@@ -1,7 +1,7 @@
 ############################################################################
 # constants.py - contains most of the constants for the laser_safety_runner
 ############################################################################
-
+import serial
 # COM PORT AND PORT SPECS
 COM_PORT = "COM5"
 BAUD_RATE = 115200
@@ -56,3 +56,8 @@ GRAY = (220, 220, 220)
 LIGHT_BLUE = (173, 216, 230)
 NAVY = (0, 0, 128)
 SKY_BLUE = (0, 191, 255)
+
+# not actually constants, but need to be away from main
+ser = serial.Serial()
+is_com_port_open = False
+py_img_last = ""
