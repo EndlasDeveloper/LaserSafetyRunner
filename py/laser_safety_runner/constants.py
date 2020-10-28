@@ -41,5 +41,6 @@ NO_LOAD_IMG = IMG_PATH + "no_load.jpg"
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
 
+# to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
 DISPLAY_WIDTH = 640
 DISPLAY_HEIGHT = 480

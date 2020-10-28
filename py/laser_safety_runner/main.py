@@ -23,8 +23,6 @@ if __name__ == '__main__':
     # initialize pygame
     pygame.init()
 
-    # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
-
     game_display = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
     py_img = pygame.image.load(img)
