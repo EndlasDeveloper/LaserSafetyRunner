@@ -1,6 +1,6 @@
-###################################################################
-# constants.py - contains most of the constants for the entire app
-###################################################################
+############################################################################
+# constants.py - contains most of the constants for the laser_safety_runner
+############################################################################
 
 # COM PORT AND PORT SPECS
 COM_PORT = "COM5"
@@ -38,6 +38,7 @@ FAULT_IMG = IMG_PATH + "fault.jpg"
 SLEEP_IMG = IMG_PATH + "sleep.jpg"
 NO_LOAD_IMG = IMG_PATH + "no_load.jpg"
 WAITING_ON_INPUT_IMG = IMG_PATH + "waiting_for_input_device.jpg"
+
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
 
