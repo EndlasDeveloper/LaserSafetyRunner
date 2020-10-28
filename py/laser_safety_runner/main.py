@@ -26,6 +26,7 @@ if __name__ == '__main__':
     game_display = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
     py_img = pygame.image.load(img)
+    rect = py_img.get_rect(width=570, height=432)
     py_img_last = py_img
 
     # void loop()
@@ -77,10 +78,12 @@ if __name__ == '__main__':
                 print("invalid input\n")
         # load image with pygame
         py_img = pygame.image.load(img)
+        rect = py_img.get_rect()
+        py_img = pygame.transform.scale(py_img, (c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT))
         # only update UI if image path changed
         if py_img != py_img_last:
             game_display.fill((0, 0, 0))
-            game_display.blit(py_img, (0, 0))
+            game_display.blit(py_img, rect)
             pygame.display.update()
 
 
