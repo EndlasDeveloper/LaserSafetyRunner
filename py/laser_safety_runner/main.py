@@ -15,6 +15,19 @@ DEFAULT_IMG = c.NO_LOAD_IMG
 
 
 #########################################################################
+# Name: run_debug_prints_for_inputs
+# Description: debugging method that prints the 4 data bytes in
+#              byte_arr
+#########################################################################
+def run_debug_prints_for_inputs(byte_arr):
+    i = 0
+    for b in byte_arr:  # debug
+        print("byte{0}: {1}".format(str(i), (int(b))))
+        i += 1
+    print("\n")
+
+
+#########################################################################
 # Name: setup_pygame_events
 # Description: sets up the pygame event handlers
 #########################################################################
@@ -38,7 +51,6 @@ def open_port_and_send_callout():
         c.ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE,
                               timeout=c.SERIAL_TIMEOUT)
         c.ser.write(b'\x80')  # send a call
-        c.ser.flushInput()
         response = c.ser.read()  # get response
         c.ser.flushInput()
         # put from bytes to int and check
@@ -54,44 +66,11 @@ def open_port_and_send_callout():
 
 
 #######################################################################
-# Name: loop
-# Description: main function body to be looped through
+# Name: update_image
+# Description: helper method to update the image, scale it, center,
+#              and render the changes
 #######################################################################
-def loop(canvas):
-    # init vars
-    img = DEFAULT_IMG
-    # must handle events in some way
-    setup_pygame_events()
-    # ports not open yet, so try to open, sent a call, and wait for a response
-
-    if not c.is_com_port_open:
-        if not open_port_and_send_callout():
-            return
-    # successful port open, so start loop
-    if c.is_com_port_open is True:
-        i = 0
-        # read input from arduino
-        try:
-            c.ser.flushInput()
-            byte_arr = c.ser.read(5)
-
-        except serial.serialutil.SerialException:
-            print("SerialException")
-            c.is_com_port_open = False
-            display_waiting_for_reply(canvas, False)
-            pygame.display.update()
-            return
-
-        # make sure input is valid
-        if b_manip.is_input_valid(byte_arr):
-            # input valid, so parse byte array to determine set bits and get appropriate image path str
-            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
-            for b in byte_arr:  # debug
-                print("byte{0}: {1}".format(str(i), (int(b))))
-                i += 1
-            print("\n")
-        else:
-            print("invalid input\n")
+def update_image(canvas, img):
     # load image with pygame
     py_img = pygame.image.load(img)
     # scale image to 95% of screen wid and hit
@@ -108,6 +87,45 @@ def loop(canvas):
         canvas.blit(py_img, rect)
         # render changes
         pygame.display.update()
+
+
+#######################################################################
+# Name: handle_serial_exception
+# Description: routine to execute upon a serial exception being thrown
+#######################################################################
+def handle_serial_exception(canvas):
+    print("SerialException")
+    c.is_com_port_open = False
+    display_waiting_for_reply(canvas, False)
+    pygame.display.update()
+
+
+#######################################################################
+# Name: loop
+# Description: main function body to be looped through
+#######################################################################
+def loop(canvas):
+    # init vars
+    img = DEFAULT_IMG
+    # must handle events in some way
+    setup_pygame_events()
+    # ports not open yet, so try to open, sent a call, and wait for a response
+    if not c.is_com_port_open and not open_port_and_send_callout():
+        return
+    # successful port open, so start loop
+    if c.is_com_port_open is True:
+        # read input from arduino
+        try:
+            byte_arr = c.ser.read(5)
+        except serial.serialutil.SerialException:
+            handle_serial_exception(canvas)
+            return
+        # make sure input is valid
+        if b_manip.is_input_valid(byte_arr):
+            run_debug_prints_for_inputs(byte_arr)
+            # input valid, so parse byte array to determine set bits and get appropriate image path str
+            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
+        update_image(canvas, img)
 
 
 ####################################################################
