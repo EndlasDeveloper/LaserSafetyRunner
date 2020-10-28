@@ -30,60 +30,78 @@ class ByteManipTestsByteArrToInt(unittest.TestCase):
 
 
 class ByteManipTestsIsInputValid(unittest.TestCase):
-    def test_is_input_valid_with_valid_input(self):
+    def test_is_input_valid_with_valid_input_byte0(self):
         byte_arr = [1, 0, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertTrue(is_valid)
 
+    def test_is_input_valid_with_valid_input_byte1(self):
         byte_arr = [0, 1, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertTrue(is_valid)
 
+    def test_is_input_valid_with_valid_input_byte2(self):
         byte_arr = [0, 0, 1, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertTrue(is_valid)
 
+    def test_is_input_valid_with_valid_input_byte3(self):
         byte_arr = [0, 0, 0, 1, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertTrue(is_valid)
 
+    def test_is_input_valid_with_valid_input_all_data_bits_set(self):
         byte_arr = [15, 15, 15, 15, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertTrue(is_valid)
 
-    def test_is_input_valid_with_invalid_input(self):
-        byte_arr = [240, 0, 0, 1, 240]
+    def test_is_input_valid_with_invalid_input_byte0_header_byte_max(self):
+        byte_arr = [240, 0, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[0] = 16
+    def test_is_input_valid_with_invalid_input_byte0_header_byte_min(self):
+        byte_arr = [16, 0, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[0] = 0
-        byte_arr[1] = 240
+    def test_is_input_valid_with_invalid_input_byte1_header_byte_max(self):
+        byte_arr = [0, 240, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[1] = 16
+    def test_is_input_valid_with_invalid_input_byte1_header_byte_min(self):
+        byte_arr = [0, 16, 0, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[1] = 0
-        byte_arr[2] = 240
+    def test_is_input_valid_with_invalid_input_byte2_header_byte_max(self):
+        byte_arr = [0, 0, 240, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[2] = 16
+    def test_is_input_valid_with_invalid_input_byte2_header_byte_min(self):
+        byte_arr = [0, 0, 16, 0, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[2] = 0
-        byte_arr[3] = 240
+    def test_is_input_valid_with_invalid_input_byte3_header_byte_max(self):
+        byte_arr = [0, 0, 0, 240, 240]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
-        byte_arr[3] = 16
+    def test_is_input_valid_with_invalid_input_byte3_header_byte_min(self):
+        byte_arr = [0, 0, 0, 16, 240]
+        is_valid = is_input_valid(byte_arr)
+        self.assertFalse(is_valid)
+
+    def test_is_input_valid_with_invalid_input_byte4_header_byte_min(self):
+        byte_arr = [0, 0, 0, 1, 0]
+        is_valid = is_input_valid(byte_arr)
+        self.assertFalse(is_valid)
+
+    def test_is_input_valid_with_invalid_input_byte4_header_byte_max(self):
+        byte_arr = [0, 0, 0, 1, 15]
         is_valid = is_input_valid(byte_arr)
         self.assertFalse(is_valid)
 
@@ -103,26 +121,26 @@ class ByteManipTestsGetDisplayImagePath(unittest.TestCase):
         self.assertEqual(c.LASER_FIRE_IMG, result_img_path)
 
     def test_get_display_image_path_byte_one(self):
-        result_img_path = get_display_image_path(256)
+        result_img_path = get_display_image_path(16)
         self.assertEqual(c.ESTOP_IMG, result_img_path)
 
-        result_img_path = get_display_image_path(512)
+        result_img_path = get_display_image_path(32)
         self.assertEqual(c.SAFETY_CIRCUIT_IMG, result_img_path)
 
-        result_img_path = get_display_image_path(1024)
+        result_img_path = get_display_image_path(64)
         self.assertEqual(c.DEFEAT_SAFETY_IMG, result_img_path)
 
-        result_img_path = get_display_image_path(2048)
+        result_img_path = get_display_image_path(128)
         self.assertEqual(c.WARNING_IMG, result_img_path)
 
     def test_get_display_image_path_byte_two(self):
-        result_img_path = get_display_image_path(65536)
+        result_img_path = get_display_image_path(256)
         self.assertEqual(c.FAULT_IMG, result_img_path)
 
-        result_img_path = get_display_image_path(131072)
+        result_img_path = get_display_image_path(512)
         self.assertEqual(c.SLEEP_IMG, result_img_path)
 
-        result_img_path = get_display_image_path(262144)
+        result_img_path = get_display_image_path(1024)
         self.assertEqual(c.FIBER_ERROR_IMG, result_img_path)
 
 

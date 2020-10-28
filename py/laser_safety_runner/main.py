@@ -17,55 +17,70 @@ is_com_port_open = False
 
 # int main()
 if __name__ == '__main__':
+    # init vars
     ser = ""
     img = DEFAULT_IMG
+    # initialize pygame
     pygame.init()
 
+    # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
     display_width = 640
     display_height = 480
     game_display = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
-    clock = pygame.time.Clock()
     py_img = pygame.image.load(img)
     py_img_last = py_img
 
     # void loop()
     while True:
+        # must handle events in some way
         for event in pygame.event.get():
             if event.type == QUIT:
-                running = False
+                is_com_port_open= False
             else:
                 continue
         # try and open the serial port if we haven't done so already
         if is_com_port_open is False:
             try:
-                ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE, timeout=c.SERIAL_TIMEOUT)
-                ser.write(b'\x80')
+                # open usb port
+                ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE,
+                                    timeout=c.SERIAL_TIMEOUT)
+                ser.write(b'\x80')  # send a call
                 ser.flushInput()
-                reply = ser.read()
+                response = ser.read()  # get response
                 ser.flushInput()
-                response = int.from_bytes(reply, c.ENDIAN, signed=False)
+                # put from bytes to int and check
+                response = int.from_bytes(response, c.ENDIAN, signed=False)
                 # print(reply) should be 255
                 if response == 255:
                     is_com_port_open = True
+            #  port failed to open
             except serial.SerialException:
                 print("Unable to open COM port: " + c.COM_PORT)
+                # stop pygame thread
                 pygame.quit()
+                # stop the program
                 exit()
+        # successful port open, so start loop
         elif is_com_port_open is True:
             index = 0
             ser.flushInput()
+            # read input from arduino
             byte_arr = ser.read(5)
             ser.flushInput()
+            # make sure input is valid
             if b_manip.is_input_valid(byte_arr):
+                # input valid, so parse byte array to determine set bits and get appropriate image path str
                 img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
-                for b in byte_arr:
+                for b in byte_arr:  # debug
                     print("byte{0}: {1}".format(str(index), (int(b))))
                     index += 1
                 print("\n")
             else:
                 print("invalid input\n")
+        # load image with pygame
         py_img = pygame.image.load(img)
+        # only update UI if image path changed
         if py_img != py_img_last:
             game_display.fill((0, 0, 0))
             game_display.blit(py_img, (0, 0))
