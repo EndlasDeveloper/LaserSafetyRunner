@@ -24,6 +24,35 @@ def setup_pygame_events():
             c.is_com_port_open = False
 
 
+#############################################################################
+# Name: open_port_and_send_call_out
+# Description: tries to open the com port, if successful, a callout is
+#              sent over serial. The arduino looks at the callout, and
+#              if the callout is expected, the arduino returns a reply,
+#              and if the reply is what is expected, the port is considered
+#              open.
+#############################################################################
+def open_port_and_send_callout():
+    try:
+        # open usb port
+        c.ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE,
+                              timeout=c.SERIAL_TIMEOUT)
+        c.ser.write(b'\x80')  # send a call
+        c.ser.flushInput()
+        response = c.ser.read()  # get response
+        c.ser.flushInput()
+        # put from bytes to int and check
+        response = int.from_bytes(response, c.ENDIAN, signed=False)
+        # print(reply) should be 255
+        if response == 255:
+            c.is_com_port_open = True
+            return True
+    #  port failed to open
+    except serial.SerialException:
+        c.is_com_port_open = False
+        return False
+
+
 #######################################################################
 # Name: loop
 # Description: main function body to be looped through
@@ -34,23 +63,10 @@ def loop(canvas):
     # must handle events in some way
     setup_pygame_events()
     # ports not open yet, so try to open, sent a call, and wait for a response
+
     if not c.is_com_port_open:
-        try:
-            # open usb port
-            c.ser = serial.Serial(port=c.COM_PORT, baudrate=c.BAUD_RATE, bytesize=c.BYTE_SIZE,
-                                  timeout=c.SERIAL_TIMEOUT)
-            c.ser.write(b'\x80')  # send a call
-            c.ser.flushInput()
-            response = c.ser.read()  # get response
-            c.ser.flushInput()
-            # put from bytes to int and check
-            response = int.from_bytes(response, c.ENDIAN, signed=False)
-            # print(reply) should be 255
-            if response == 255:
-                c.is_com_port_open = True
-        #  port failed to open
-        except serial.SerialException:
-            c.is_com_port_open = False
+        if not open_port_and_send_callout():
+            return
     # successful port open, so start loop
     if c.is_com_port_open is True:
         i = 0
@@ -58,7 +74,7 @@ def loop(canvas):
         try:
             c.ser.flushInput()
             byte_arr = c.ser.read(5)
-            
+
         except serial.serialutil.SerialException:
             print("SerialException")
             c.is_com_port_open = False

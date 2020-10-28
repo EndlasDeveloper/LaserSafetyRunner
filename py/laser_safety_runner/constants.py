@@ -1,7 +1,10 @@
 ############################################################################
 # constants.py - contains most of the constants for the laser_safety_runner
 ############################################################################
+
+# imports
 import serial
+
 # COM PORT AND PORT SPECS
 COM_PORT = "COM5"
 BAUD_RATE = 115200
