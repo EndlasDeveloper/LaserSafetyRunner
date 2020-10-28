@@ -9,7 +9,7 @@ import constants as c
 import pygame
 from pygame.locals import *
 
-# default image path
+# default image path to no-load
 DEFAULT_IMG = c.NO_LOAD_IMG
 
 # flag so we don't try and open a port twice
