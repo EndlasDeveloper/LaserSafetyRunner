@@ -24,9 +24,8 @@ if __name__ == '__main__':
     pygame.init()
 
     # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
-    display_width = 640
-    display_height = 480
-    game_display = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN)
+
+    game_display = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption('LASER SAFETY RUNNER')
     py_img = pygame.image.load(img)
     py_img_last = py_img
@@ -36,7 +35,7 @@ if __name__ == '__main__':
         # must handle events in some way
         for event in pygame.event.get():
             if event.type == QUIT:
-                is_com_port_open= False
+                is_com_port_open = False
             else:
                 continue
         # try and open the serial port if we haven't done so already
