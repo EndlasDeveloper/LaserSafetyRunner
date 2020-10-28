@@ -1,5 +1,5 @@
 ############################################################################
-# constants.py - contains most of the constants for the laser_safety_runner
+# globals_and_consts.py - contains most of the constants for the laser_safety_runner
 ############################################################################
 
 # imports

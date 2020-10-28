@@ -5,7 +5,7 @@
 # imports
 import byte_manip as b_manip
 import serial
-import constants as c
+import globals_and_consts as c
 import pygame
 import platform
 from pygame.locals import *
