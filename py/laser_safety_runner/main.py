@@ -35,9 +35,7 @@ def main(num_loops, game_display, is_pygame_init):
             game_display.blit(text, text_rect)
             # render changes
             pygame.display.update()
-
-    py_img = pygame.image.load(c.WAITING_ON_INPUT_IMG)
-    py_img_last = py_img
+    py_img_last = ""
     # void loop()
     while True:
         # must handle events in some way
@@ -64,11 +62,10 @@ def main(num_loops, game_display, is_pygame_init):
             #  port failed to open
             except serial.SerialException:
                 print("Unable to open COM port: " + c.COM_PORT)
-                main(num_loops+1, game_display, True)
                 return
         # successful port open, so start loop
         elif is_com_port_open is True:
-            index = 0
+            i = 0
             ser.flushInput()
             # read input from arduino
             byte_arr = ser.read(5)
@@ -78,8 +75,8 @@ def main(num_loops, game_display, is_pygame_init):
                 # input valid, so parse byte array to determine set bits and get appropriate image path str
                 img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
                 for b in byte_arr:  # debug
-                    print("byte{0}: {1}".format(str(index), (int(b))))
-                    index += 1
+                    print("byte{0}: {1}".format(str(i), (int(b))))
+                    i += 1
                 print("\n")
             else:
                 print("invalid input\n")
@@ -92,8 +89,9 @@ def main(num_loops, game_display, is_pygame_init):
         rect = rect.move(int(0.05 * c.DISPLAY_WIDTH / 2), int(0.05 * c.DISPLAY_HEIGHT / 2))
         # only update UI if image path changed
         if py_img != py_img_last:
+            py_img_last = py_img
             # background color
-            game_display.fill(c.SKY_BLUE)
+            game_display.fill(c.BLACK)
             # draw image
             game_display.blit(py_img, rect)
             # render changes
@@ -102,4 +100,11 @@ def main(num_loops, game_display, is_pygame_init):
 
 # int main()
 if __name__ == '__main__':
-    main(10000, pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN), False)
+    val = 9999
+    index = 1
+    canvas = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
+    main(val + index, canvas, False)
+    while True:
+        index += 1
+        main(val+index, canvas, False)
+
