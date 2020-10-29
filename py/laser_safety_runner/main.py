@@ -9,6 +9,7 @@ import globals_and_consts as c
 import pygame
 import platform
 from pygame.locals import *
+import datetime
 
 # default image path to no-load
 DEFAULT_IMG = c.NO_LOAD_IMG
@@ -70,21 +71,25 @@ def open_port_and_send_callout():
 # Description: helper method to update the image, scale it, center,
 #              and render the changes
 #######################################################################
-def update_image(canvas, img):
+def update_image(img):
+    if datetime.datetime.now().microsecond > c.current_millis:
+        c.current_millis = datetime.datetime.now().microsecond
+        c.ser.write(c.CONTACT_TO_ARD)
     # load image with pygame
     py_img = pygame.image.load(img)
-    # scale image to 95% of screen wid and hit
-    py_img = pygame.transform.scale(py_img, (int(0.95 * c.DISPLAY_WIDTH), int(0.95 * c.DISPLAY_HEIGHT)))
-    rect = py_img.get_rect()
-    # recenter rectangle so there is an even amount of border on each side
-    rect = rect.move(int(0.05 * c.DISPLAY_WIDTH / 2), int(0.05 * c.DISPLAY_HEIGHT / 2))
-    # only update UI if image path changed
+    # change stuff only if stuff changed
     if py_img != c.py_img_last:
+        # scale image to 95% of screen wid and hit
+        py_img = pygame.transform.scale(py_img, (int(0.95 * c.DISPLAY_WIDTH), int(0.95 * c.DISPLAY_HEIGHT)))
+        rect = py_img.get_rect()
+        # recenter rectangle so there is an even amount of border on each side
+        rect = rect.move(int(0.05 * c.DISPLAY_WIDTH / 2), int(0.05 * c.DISPLAY_HEIGHT / 2))
+        # only update UI if image path changed
         c.py_img_last = py_img
         # background color
-        canvas.fill(c.BLACK)
+        c.main_canvas.fill(c.BLACK)
         # draw image
-        canvas.blit(py_img, rect)
+        c.main_canvas.blit(py_img, rect)
         # render changes
         pygame.display.update()
 
@@ -93,39 +98,26 @@ def update_image(canvas, img):
 # Name: handle_serial_exception
 # Description: routine to execute upon a serial exception being thrown
 #######################################################################
-def handle_serial_exception(canvas):
+def handle_serial_exception():
     print("SerialException")
     c.is_com_port_open = False
-    display_waiting_for_reply(canvas, False)
+    display_waiting_for_reply(False)
     pygame.display.update()
 
 
-#######################################################################
-# Name: loop
-# Description: main function body to be looped through
-#######################################################################
-def loop(canvas):
-    # init vars
-    img = DEFAULT_IMG
-    # must handle events in some way
-    setup_pygame_events()
-    # ports not open yet, so try to open, sent a call, and wait for a response
-    if not c.is_com_port_open and not open_port_and_send_callout():
-        return
-    # successful port open, so start loop
-    if c.is_com_port_open is True:
-        # read input from arduino
-        try:
-            byte_arr = c.ser.read(5)
-        except serial.serialutil.SerialException:
-            handle_serial_exception(canvas)
-            return
-        # make sure input is valid
-        if b_manip.is_input_valid(byte_arr):
-            run_debug_prints_for_inputs(byte_arr)
-            # input valid, so parse byte array to determine set bits and get appropriate image path str
-            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
-        update_image(canvas, img)
+####################################################################
+# Name: read_input_bytes
+# Description: tries to read in 5 bytes over the open serial
+#              port. If it fails, a handler is called where
+#              values and flags are set to try and re-open
+#              the port
+####################################################################
+def read_input_bytes():
+    try:
+        return c.ser.read(5)
+    except serial.SerialException:
+        handle_serial_exception()
+        return None
 
 
 ####################################################################
@@ -145,24 +137,61 @@ def determine_platform():
 # Description: method that takes the display canvas, and whether
 #              it is an initial wait display or signal has been interrupted
 ############################################################################
-def display_waiting_for_reply(display_canvas, is_init_screen):
+def display_waiting_for_reply(is_init_screen):
     if is_init_screen:
-        display_canvas.fill(c.SKY_BLUE)
+        c.main_canvas.fill(c.SKY_BLUE)
     pygame.init()
     pygame.display.set_caption('LASER SAFETY RUNNER')
     font = pygame.font.Font('freesansbold.ttf', 40)
     text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
     text_rect = text.get_rect(center=(int(c.DISPLAY_WIDTH / 2), int(c.DISPLAY_HEIGHT / 2)))
-    display_canvas.blit(text, text_rect)
+    c.main_canvas.blit(text, text_rect)
+    pygame.display.update()
+
+
+##################################################################################################
+# Name: setup
+# Description: helper method to initialize counter variables, display a startup msg/img while
+#              system finished initializing, and initializes and signals the arduino
+##################################################################################################
+def setup():
+    # look at platform at decide which com port naming convention to use
+    determine_platform()
+    # setup and render the waiting or device message
+    display_waiting_for_reply(True)
+    # tell arduino to reset its count variables
+    # c.ser.write(c.RESET_COUNTS)
+    # initialize communication with arduino
+    # c.ser.write(c.CONTACT_TO_ARD)
+
+
+#######################################################################
+# Name: loop
+# Description: main function body to be looped through
+#######################################################################
+def loop():
+    # init vars
+    img = DEFAULT_IMG
+    # must handle events in some way
+    setup_pygame_events()
+    # ports not open yet, so try to open, sent a call, and wait for a response
+    if not c.is_com_port_open and not open_port_and_send_callout():
+        return
+    # successful port open, so start loop
+    if c.is_com_port_open is True:
+        # read input from arduino
+        byte_arr = read_input_bytes()
+        # make sure input is valid
+        if b_manip.is_input_valid(byte_arr):
+            run_debug_prints_for_inputs(byte_arr)
+            # input valid, so parse byte array to determine set bits and get appropriate image path str
+            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
+        update_image(img)
 
 
 # int main()
 if __name__ == '__main__':
-    determine_platform()
-    main_canvas = pygame.display.set_mode((c.DISPLAY_WIDTH, c.DISPLAY_HEIGHT), pygame.FULLSCREEN)
-    display_waiting_for_reply(main_canvas, True)
-    # render changes
-    pygame.display.update()
+    setup()
+    # void loop()
     while True:
-        loop(main_canvas)
-
+        loop()

@@ -4,6 +4,8 @@
 
 # imports
 import serial
+import datetime as time
+import pygame
 
 # COM PORT AND PORT SPECS
 COM_PORT = "COM5"
@@ -44,6 +46,7 @@ WAITING_ON_INPUT_IMG = IMG_PATH + "waiting_for_input_device.jpg"
 
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
+CHECK_ARD_TIMEOUT = 1000
 
 # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
 DISPLAY_WIDTH = 640
@@ -64,3 +67,12 @@ SKY_BLUE = (0, 191, 255)
 ser = serial.Serial()
 is_com_port_open = False
 py_img_last = ""
+
+# initialize countdown for checking the arduino
+last_millis = type(time.time)
+COM_PORT_INDEX = 1
+CONTACT_TO_ARD = b'170'
+RESET_COUNTS = b'153'
+
+main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
+current_millis = 0

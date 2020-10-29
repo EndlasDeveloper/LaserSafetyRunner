@@ -1,23 +1,17 @@
 import byte_manip as b_manip
 import serial
-
-COM_PORT_INDEX = 1
-CONTACT_TO_ARD = b'170'
-RESET_COUNTS = b'153'
+import globals_and_consts as c
+import datetime as time
 
 serial_in_buffer = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 serial_count = 0
 inputs_from_ard = 0
-last_millis = 0
-check_ard_timeout = 1000
 
 
 ##################################################
 # Name: serial_event
 # Description: TODO implement!
-##################################################
-def serial_event():
-    pass
+#################################################
 
 # // arduino splits up the data int, only using 4LSB in transmission (0-15)of every byte
 # // any ones in the 4 MSB (16-255)indicates end of packet and contains arduino status
