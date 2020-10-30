@@ -4,7 +4,7 @@
 
 # imports
 import serial
-import datetime as time
+import datetime as dt
 import pygame
 
 # COM PORT AND PORT SPECS
@@ -66,13 +66,13 @@ SKY_BLUE = (0, 191, 255)
 # not actually constants, but need to be away from main
 ser = serial.Serial()
 is_com_port_open = False
-py_img_last = ""
+py_img_last = None
 
 # initialize countdown for checking the arduino
-last_millis = type(time.time)
-COM_PORT_INDEX = 1
-CONTACT_TO_ARD = b'170'
-RESET_COUNTS = b'153'
+last_millis = type(dt.datetime)
+COM_PORT_INDEX = int(1)
+CONTACT_TO_ARD_FLAG_BYTE = b'/xAA'
+RESET_COUNTS_FLAG_BYTE = b'/x99'
 
 main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
 current_millis = 0

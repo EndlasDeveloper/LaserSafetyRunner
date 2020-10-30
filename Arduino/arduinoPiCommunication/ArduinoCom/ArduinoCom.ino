@@ -36,8 +36,8 @@ void setup() {
   }
   Wire.begin();
   Serial.begin(500000);
-  Serial1.begin(250000);
-  Serial1.println("Im up!");
+  Serial.begin(250000);
+  Serial.println("Im up!");
 }
 
 void loop() {
@@ -57,17 +57,17 @@ void loop() {
       }
       if (inByte == CONTACT_FROM_PI) {
         contactFromPi = true;
-        Serial1.println("CONTACT_FROM_PI");
+        Serial.println("CONTACT_FROM_PI");
         send_uint32_in_halfByteArray(inputs);
         //digitalWrite(0,HIGH);
       }
     }
     else {
       expectingCheckSumResponse = false;
-      Serial1.print("recieved    ---checkSum: ");
-      Serial1.print(inByte,DEC);
-      Serial1.print(" in: ");
-      Serial1.println(millis() - previousMillis);
+      Serial.print("recieved    ---checkSum: ");
+      Serial.print(inByte,DEC);
+      Serial.print(" in: ");
+      Serial.println(millis() - previousMillis);
     }
   }
 
@@ -151,18 +151,18 @@ void send_uint32_in_halfByteArray(uint32_t uint32) {
   SerialOutBuffer[4] = (uint32 >> 12) & 0x0F;
   SerialOutBuffer[5] = magicStatusByte;
   Serial.write(SerialOutBuffer, 6);
-  Serial1.print("transmitting---checkSum: ");
-  Serial1.println(checkSum);
+  Serial.print("transmitting---checkSum: ");
+  Serial.println(checkSum);
   expectingCheckSumResponse = true;
   previousMillis = millis();
   //digitalWrite(1,LOW);
 }
 
 void noResponseTimeout() {
-  Serial1.print("noResponseTimeout()");
+  Serial.print("noResponseTimeout()");
   noResponseErr = true;
   noResponseErrCount++;
-  Serial1.println(noResponseErrCount, DEC);
+  Serial.println(noResponseErrCount, DEC);
   ErrCount = noResponseErrCount;
   if (noResponseErrCount > noResponseErrLimit) {
     triggerWatchdog();
@@ -170,7 +170,7 @@ void noResponseTimeout() {
 }
 
 void resetCounts() {
-  Serial1.println("resetCounts()");
+  Serial.println("resetCounts()");
   noResponseErrCount = 0;
   watchdogTriggered = false;
   noResponseErr = false;
@@ -178,7 +178,7 @@ void resetCounts() {
 }
 
 void triggerWatchdog() {
-  Serial1.println("triggerWatchdog()");
+  Serial.println("triggerWatchdog()");
   watchdogTriggered = true;
   resetCounts();
   //digitalWrite(0,LOW);
