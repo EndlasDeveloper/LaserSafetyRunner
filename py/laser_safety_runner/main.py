@@ -11,23 +11,12 @@ import platform
 import serial.tools.list_ports
 from pygame.locals import *
 import datetime
-import os, sys
+import os
+import sys
+import debug_print as debug
 
 # default image path to no-load
 DEFAULT_IMG = c.NO_LOAD_IMG
-
-
-#########################################################################
-# Name: run_debug_prints_for_inputs
-# Description: debugging method that prints the 4 data bytes in
-#              byte_arr
-#########################################################################
-def __print_debugs(byte_arr):
-    i = 0
-    for b in byte_arr:  # print the bytes as integers
-        print("byte{0}: {1}".format(str(i), (int(b))))
-        i += 1
-    print("\n")
 
 
 #########################################################################
@@ -104,8 +93,6 @@ def update_image(img):
 # Description: routine to execute upon a serial exception being thrown
 #######################################################################
 def handle_serial_exception():
-    # debug
-    print("SerialException")
     # indicate com port is closed
     c.is_com_port_open = False
     # show waiting for device response
@@ -137,18 +124,28 @@ def read_input_bytes():
 ####################################################################
 def determine_platform():
     # get list of available ports
+
+    if sys.platform.startswith('win'):
+        for i in range(9):
+            c.COM_PORT = "COM" + str(i)
+            try:
+                if open_port_and_send_callout():
+                    return True
+            except ModuleNotFoundError:
+                    continue
+
+    debug.Debugger.print_no_com_port_for_platform('win')
+
     try:
-        if sys.platform.startswith('win'):
-            c.COM_PORT = "COM5"
+        if os.uname()[1] == 'raspberrypi' or os.uname()[1] == 'linux':
+            for port in list(serial.tools.list_ports.comports()):
+                if port == "/dev/ttyUSB0":
+                    c.COM_PORT = port
+            open_port_and_send_callout()
     except ModuleNotFoundError:
-        try:
-            if os.uname()[1] == 'raspberrypi':
-                for port in list(serial.tools.list_ports.comports()):
-                    if port == "/dev/ttyUSB*":
-                        c.COM_PORT = port
-                open_port_and_send_callout()
-        except ModuleNotFoundError:
-            return
+        debug.Debugger.print_no_com_port_for_platform('linux')
+        return False
+    return True
 
 
 ############################################################################
@@ -157,22 +154,26 @@ def determine_platform():
 #              it is an initial wait display or signal has been interrupted
 ############################################################################
 def display_waiting_for_reply(is_init_screen):
-    # if screen is initialized, background sky blue
-    if is_init_screen:
-        c.main_canvas.fill(c.SKY_BLUE)
-    # initialize pygame
-    pygame.init()
-    # set window title message
-    pygame.display.set_caption('LASER SAFETY RUNNER')
-    # set font for the waiting for reply msg
-    font = pygame.font.Font('freesansbold.ttf', 40)
-    # set the text str, background color, and text color
-    text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
-    # center the waiting msg
-    text_rect = text.get_rect(center=(int(c.DISPLAY_WIDTH / 2), int(c.DISPLAY_HEIGHT / 2)))
-    # update canvas and render the waiting for reply msg
-    c.main_canvas.blit(text, text_rect)
-    pygame.display.update()
+    try:
+        # if screen is initialized, background sky blue
+        if is_init_screen:
+            c.main_canvas.fill(c.SKY_BLUE)
+        # initialize pygame
+        pygame.init()
+        # set window title message
+        pygame.display.set_caption('LASER SAFETY RUNNER')
+        # set font for the waiting for reply msg
+        font = pygame.font.Font('freesansbold.ttf', 40)
+        # set the text str, background color, and text color
+        text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
+        # center the waiting msg
+        text_rect = text.get_rect(center=(int(c.DISPLAY_WIDTH / 2), int(c.DISPLAY_HEIGHT / 2)))
+        # update canvas and render the waiting for reply msg
+        c.main_canvas.blit(text, text_rect)
+        pygame.display.update()
+        return True
+    except pygame.error():
+        return False
 
 
 ############################################################################
@@ -184,12 +185,16 @@ def initialize_and_contact_ard():
     # tell arduino to reset its count variables
     try:
         c.ser.write(c.RESET_COUNTS_FLAG_BYTE)
-        # time.sleep(1)
-        # initialize communication with arduino
-        c.ser.write(c.CONTACT_TO_ARD_FLAG_BYTE)
-        # time.sleep(1)
     except serial.SerialException:
+        debug.Debugger.print_serial_exception("RESET_COUNTS WRITE EXCEPTION")
         handle_serial_exception()
+        return False
+    try:
+        c.ser.write(c.CONTACT_TO_ARD_FLAG_BYTE)
+    except serial.SerialException:
+        debug.Debugger.print_serial_exception("CONTACT_TO_ARD")
+        handle_serial_exception()
+        return False
 
 
 ##################################################################################################
@@ -199,10 +204,10 @@ def initialize_and_contact_ard():
 ##################################################################################################
 def setup():
     # look at platform at decide which com port naming convention to use
-    determine_platform()
-    # setup and render the waiting or device message
-    display_waiting_for_reply(True)
-    initialize_and_contact_ard()
+    if determine_platform():
+        # setup and render the waiting or device message
+        if display_waiting_for_reply(True):
+            initialize_and_contact_ard()
 
 
 #######################################################################
@@ -225,7 +230,7 @@ def loop():
             return
         # make sure input is valid
         if b_manip.is_input_valid(byte_arr):
-            __print_debugs(byte_arr)
+            debug.Debugger.print_byte_arr(byte_arr)
             # input valid, so parse byte array to determine set bits and get appropriate image path str
             img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(byte_arr))
         update_image(img)
