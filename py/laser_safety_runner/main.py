@@ -86,6 +86,9 @@ def update_image(img):
 def handle_serial_exception():
     # indicate com port is closed
     c.is_com_port_open = False
+    # no guarantee that usb will reconnect in same port
+    c.has_port_connected = False
+    c.found_platform = False
     # show waiting for device response
     display_system_waiting(c.WAITING_FOR_INPUT_DEVICE_MSG, False)
     # render changes
@@ -100,37 +103,33 @@ def handle_serial_exception():
 #              the port
 ####################################################################
 def read_input_bytes():
-    if c.is_com_port_open:
-        c.ser.flushInput()
-        c.ser.write(c.RESET_COUNTS_FLAG_BYTE)
+    try:
+        for i in range(0, len(c.serial_in_buffer)-1):
+            c.serial_in_buffer[i] = c.ser.read()
+            if c.serial_in_buffer[i] > 127 and c.serial_count >= 5:
+                print(int(c.serial_in_buffer[i]) & 0xF)
+                if (int(c.serial_in_buffer[i]) & (1 << 6)) > 0:
+                    print("Arduino triggered the watchdog!")
+                    c.ser.write(c.RESET_COUNTS_FLAG_BYTE)
+                if (int(c.serial_in_buffer[i]) & (1 << 5)) > 0:
+                    print("Arduino's reporting an error occurred at least once!")
+                c.inputs_from_ard = int(c.serial_in_buffer[i]) << 12 | \
+                    int(c.serial_in_buffer[c.serial_count - 2]) << 8 | \
+                    int(c.serial_in_buffer[c.serial_count - 3]) << 4 | \
+                    int(c.serial_in_buffer[c.serial_count - 4])
 
-        try:
-            c.serial_in_buffer = c.ser.read(c.READ_BYTE_SIZE)
-            for b in c.serial_in_buffer:
-                if int(b) > 127 and c.serial_count >= 5:
-                    print(int(b) & 0xF)
-                    if (int(b) & (1 << 6)) > 0:
-                        print("Arduino triggered the watchdog!")
-                        c.ser.write(c.RESET_COUNTS_FLAG_BYTE)
-                    if (int(b) & (1 << 5)) > 0:
-                        print("Arduino's reporting an error occurred at least once!")
-                    c.inputs_from_ard = int(b) << 12 | \
-                        int(c.serial_in_buffer[c.serial_count - 2]) << 8 | \
-                        int(c.serial_in_buffer[c.serial_count - 3]) << 4 | \
-                        int(c.serial_in_buffer[c.serial_count - 4])
-
-                    if c.serial_in_buffer[c.serial_count - 5] == c.inputs_from_ard % 128:
-                        c.ser.write(c.serial_in_buffer[c.serial_count - 5])
-                    else:
-                        print("Checksum didn't match!")
-                    print(bin(c.inputs_from_ard))
-                    c.serial_count = 0
+                if c.serial_in_buffer[c.serial_count - 5] == c.inputs_from_ard % 128:
+                    c.ser.write(c.serial_in_buffer[c.serial_count - 5])
                 else:
-                    c.serial_count += 1
-        except serial.SerialException:  # read failed
-            # set proper flags to indicate port needs to be re-opened
-            handle_serial_exception()
-        debug.Debugger.print_byte_arr(c.serial_in_buffer)
+                    print("Checksum didn't match!")
+                print(bin(c.inputs_from_ard))
+                c.serial_count = 0
+            else:
+                c.serial_count += 1
+    except serial.SerialException:  # read failed
+        # set proper flags to indicate port needs to be re-opened
+        handle_serial_exception()
+    debug.Debugger.print_byte_arr(c.serial_in_buffer)
 
 
 ####################################################################
@@ -141,14 +140,12 @@ def determine_platform_and_connect():
     # see if we're on windows platform
     if c.this_platform == c.WIN:
         c.COM_PORT = "COM5"
-        try:
-            # try to connect to each, see if a response from the arduino returns
-            if open_port_and_flag_result():
-                set_open_port_flags()
-                return True
-        except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-            if not c.FOUND_PLATFORM:
-                for i in range(9):  # iterate through all possible COM ports
+        if open_port_and_flag_result():
+            set_open_port_flags()
+            return True
+        if not c.found_platform:
+            for i in range(9):  # iterate through all possible COM ports
+                if "COM"+str(i) != "COM5":
                     c.COM_PORT = "COM" + str(i)
                     try:
                         # try to connect to each, see if a response from the arduino returns
@@ -157,19 +154,14 @@ def determine_platform_and_connect():
                             return True
                     except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                         continue
-            else:
-                try:
-                    if open_port_and_flag_result():  # try to connect to each, see if a response from the arduino returns
-                        set_open_port_flags()
-                        return True
-                except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-                    handle_serial_exception()
+                else:
+                    continue
 
     # debug statement indicating all windows attempts to open a port failed
     debug.Debugger.print_no_com_port_for_platform(c.WIN)
 
     if c.this_platform == c.LIN:
-        if not c.FOUND_PLATFORM and not c.HAS_PORT_CONNECTED:
+        if not c.found_platform and not c.has_port_connected:
             for i in range(9):  # iterate through all possible COM ports
                 c.COM_PORT = "/dev/ttyUSB" + str(i)
                 try:
@@ -191,9 +183,9 @@ def determine_platform_and_connect():
 
 def set_open_port_flags():
     debug.Debugger.print_com_port(c.COM_PORT)
-    c.HAS_PORT_CONNECTED = True
+    c.has_port_connected = True
     c.is_com_port_open = True
-    c.FOUND_PLATFORM = True
+    c.found_platform = True
 
 
 ############################################################################
@@ -252,7 +244,7 @@ def loop():
     # must handle events in some way
     setup_pygame_events()
     # ports not open yet, so try to open, sent a call, and wait for a response
-    img = DEFAULT_IMG
+    c.img = DEFAULT_IMG
     if not c.is_com_port_open:
         setup(c.WAITING_FOR_INPUT_DEVICE_MSG, False)
         if not open_port_and_flag_result():
@@ -266,9 +258,8 @@ def loop():
         if c.serial_in_buffer is not None and b_manip.is_input_valid(c.serial_in_buffer):
             debug.Debugger.print_byte_arr(c.serial_in_buffer)
             # input valid, so parse byte array to determine set bits and get appropriate image path str
-            img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(c.serial_in_buffer))
-        if img is not None:
-            update_image(img)
+            c.img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(c.serial_in_buffer))
+            update_image(c.img)
 
 
 ##################################################################################################
