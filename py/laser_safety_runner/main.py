@@ -48,12 +48,15 @@ def open_port_and_send_callout():
         # put from bytes to int and check
         response = int.from_bytes(response, c.ENDIAN, signed=False)
         # print(reply) should be 255
-        if response == 255:
+        if response != 0:
             c.is_com_port_open = True
             return True
+        else:
+            debug.Debugger.print_bad_ard_response(response)
     #  port failed to open
     except serial.SerialException:
         c.is_com_port_open = False
+        display_system_waiting(c.WAITING_FOR_INPUT_DEVICE_MSG, True)
         return False
 
 
@@ -96,7 +99,7 @@ def handle_serial_exception():
     # indicate com port is closed
     c.is_com_port_open = False
     # show waiting for device response
-    display_waiting_for_reply(False)
+    display_system_waiting(c.WAITING_FOR_INPUT_DEVICE_MSG, False)
     # render changes
     pygame.display.update()
 
@@ -122,30 +125,32 @@ def read_input_bytes():
 # Name: determine_platform
 # Description: method that sets COM_PORT to system dependent syntax
 ####################################################################
-def determine_platform():
-    # get list of available ports
-
-    if sys.platform.startswith('win'):
-        for i in range(9):
+def determine_platform_and_connect():
+    # see if we're on windows platform
+    if c.this_platform == c.WIN and not c.HAS_PORT_CONNECTED:
+        for i in range(9):  # iterate through all possible COM ports
             c.COM_PORT = "COM" + str(i)
+            debug.Debugger.print_com_port(c.COM_PORT)
             try:
-                if open_port_and_send_callout():
+                if open_port_and_send_callout():  # try to connect to each, see if a response from the arduino returns
+                    c.HAS_PORT_CONNECTED = True
                     return True
-            except ModuleNotFoundError:
-                    continue
+            except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
+                continue
 
-    debug.Debugger.print_no_com_port_for_platform('win')
-
-    try:
-        if os.uname()[1] == 'raspberrypi' or os.uname()[1] == 'linux':
-            for port in list(serial.tools.list_ports.comports()):
-                if port == "/dev/ttyUSB0":
-                    c.COM_PORT = port
-            open_port_and_send_callout()
-    except ModuleNotFoundError:
-        debug.Debugger.print_no_com_port_for_platform('linux')
-        return False
-    return True
+    # debug statement indicating all windows attempts to open a port failed
+    debug.Debugger.print_no_com_port_for_platform(c.WIN)
+    if c.this_platform == c.LIN and not c.HAS_PORT_CONNECTED:
+        for i in range(9):  # iterate through all possible COM ports
+            c.COM_PORT = "/dev/ttyUSB" + str(i)
+            debug.Debugger.print_com_port(c.COM_PORT)
+            try:
+                if open_port_and_send_callout():  # try to connect to each, see if a response from the arduino returns
+                    c.HAS_PORT_CONNECTED = True
+                    return True
+            except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
+                continue
+    return False
 
 
 ############################################################################
@@ -153,7 +158,7 @@ def determine_platform():
 # Description: method that takes the display canvas, and whether
 #              it is an initial wait display or signal has been interrupted
 ############################################################################
-def display_waiting_for_reply(is_init_screen):
+def display_system_waiting(msg, is_init_screen):
     try:
         # if screen is initialized, background sky blue
         if is_init_screen:
@@ -161,11 +166,11 @@ def display_waiting_for_reply(is_init_screen):
         # initialize pygame
         pygame.init()
         # set window title message
-        pygame.display.set_caption('LASER SAFETY RUNNER')
+        pygame.display.set_caption(c.DISPLAY_CAPTION)
         # set font for the waiting for reply msg
-        font = pygame.font.Font('freesansbold.ttf', 40)
+        font = pygame.font.Font(c.DISPLAY_FONT, c.DISPLAY_FONT_SIZE)
         # set the text str, background color, and text color
-        text = font.render('Waiting for input device reply...', True, c.LIGHT_BLUE, c.NAVY)
+        text = font.render(msg, True, c.LIGHT_BLUE, c.NAVY)
         # center the waiting msg
         text_rect = text.get_rect(center=(int(c.DISPLAY_WIDTH / 2), int(c.DISPLAY_HEIGHT / 2)))
         # update canvas and render the waiting for reply msg
@@ -197,31 +202,19 @@ def initialize_and_contact_ard():
         return False
 
 
-##################################################################################################
-# Name: setup
-# Description: helper method to initialize counter variables, display a startup msg/img while
-#              system finished initializing, and initializes and signals the arduino
-##################################################################################################
-def setup():
-    # look at platform at decide which com port naming convention to use
-    if determine_platform():
-        # setup and render the waiting or device message
-        if display_waiting_for_reply(True):
-            initialize_and_contact_ard()
-
-
 #######################################################################
 # Name: loop
 # Description: main function body to be looped through
 #######################################################################
 def loop():
-    # init vars
-    img = DEFAULT_IMG
     # must handle events in some way
     setup_pygame_events()
     # ports not open yet, so try to open, sent a call, and wait for a response
-    if not c.is_com_port_open and not open_port_and_send_callout():
-        return
+    if not c.is_com_port_open:
+        img = DEFAULT_IMG
+        setup(c.WAITING_FOR_INPUT_DEVICE_MSG, False)
+        if open_port_and_send_callout():
+            return
     # successful port open, so start loop
     if c.is_com_port_open is True:
         # read input from arduino
@@ -236,9 +229,22 @@ def loop():
         update_image(img)
 
 
+##################################################################################################
+# Name: setup
+# Description: helper method to initialize counter variables, display a startup msg/img while
+#              system finished initializing, and initializes and signals the arduino
+##################################################################################################
+def setup(display_msg, is_init):
+    # display image indicating searching for com ports
+    if display_system_waiting(display_msg, is_init):
+        # if the local systems platform can be determined
+        if determine_platform_and_connect():
+            initialize_and_contact_ard()
+
+
 # int main()
 if __name__ == '__main__':
-    setup()
+    setup(c.OPENING_COM_PORTS, True)
     # void loop()
     while True:
         loop()

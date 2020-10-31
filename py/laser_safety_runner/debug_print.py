@@ -47,3 +47,10 @@ class Debugger:
     def print_no_com_port_for_platform(platform):
         print("Failed to connect to any available com port on platform:" + str(platform))
 
+    @staticmethod
+    def print_com_port(port):
+        print("Curr communication port: " + port)
+
+    @staticmethod
+    def print_bad_ard_response(response):
+        print("Unexpected Arduino response: " + str(response))

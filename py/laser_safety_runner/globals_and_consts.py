@@ -6,9 +6,16 @@
 import serial
 import datetime as dt
 import pygame
+import platform
+
+# SYSTEMS
+WIN = 'Windows'
+RASP = 'raspberrypi'
+LIN = 'Linux'
 
 # COM PORT AND PORT SPECS
-COM_PORT = "COM5"
+COM_PORT = ""
+HAS_PORT_CONNECTED = False
 BAUD_RATE = 115200
 BYTE_SIZE = 8
 SERIAL_TIMEOUT = 2
@@ -47,6 +54,13 @@ WAITING_ON_INPUT_IMG = IMG_PATH + "waiting_for_input_device.jpg"
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
 CHECK_ARD_TIMEOUT = 1000
+DISPLAY_CAPTION = "LASER SAFETY RUNNER"
+DISPLAY_FONT = 'freesansbold.ttf'
+DISPLAY_FONT_SIZE = 40
+WAITING_FOR_INPUT_DEVICE_MSG = "Waiting for input device reply..."
+OPENING_COM_PORTS = "Finding open COM port..." \
+                    ""
+this_platform = platform.system()
 
 # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
 DISPLAY_WIDTH = 640
