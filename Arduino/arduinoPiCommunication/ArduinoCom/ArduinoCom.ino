@@ -20,7 +20,7 @@ uint8_t noResponseErrCount = 0;
 uint8_t noResponseErrLimit = 3;
 bool noResponseErr = false;
 bool watchdogTriggered = false;
-
+bool hasRPiResponded = false;
 uint32_t inputs = 0; //where the inputs are stored
 uint8_t ErrCount = 0; // the 4 LSBs of the magic Status byte containing the err count of interest
 
@@ -35,9 +35,18 @@ void setup() {
     pinMode(pin, INPUT_PULLUP);
   }
   Wire.begin();
-  Serial.begin(500000);
-  Serial.begin(250000);
+  Serial.begin(115200);
+  while(!hasRPiResponded)
+    waitForRPi();
   Serial.println("Im up!");
+}
+
+void waitForRPi(){
+  Serial.write(byte(1));
+  byte response = Serial.read();
+  if(response != 1)
+    hasRPiResponded = false;
+  hasRPiResponded = true;
 }
 
 void loop() {

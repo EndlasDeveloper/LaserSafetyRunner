@@ -13,12 +13,15 @@ WIN = 'Windows'
 RASP = 'raspberrypi'
 LIN = 'Linux'
 
+MAGIC_BYTE = b'x/80'
+
 # COM PORT AND PORT SPECS
 COM_PORT = ""
 HAS_PORT_CONNECTED = False
 BAUD_RATE = 115200
 BYTE_SIZE = 8
 SERIAL_TIMEOUT = 2
+READ_BYTE_SIZE = 6
 
 # LASER FIRE BYTE MASKS
 LASER_FIRE_MASK = 0x1
@@ -83,10 +86,12 @@ is_com_port_open = False
 py_img_last = None
 
 # initialize countdown for checking the arduino
-last_millis = type(dt.datetime)
+last_clock = dt.datetime.now()
+serial_in_buffer = []
+serial_count = 0
+inputs_from_ard = 0
 COM_PORT_INDEX = int(1)
 CONTACT_TO_ARD_FLAG_BYTE = b'/xAA'
 RESET_COUNTS_FLAG_BYTE = b'/x99'
-
+FOUND_PLATFORM = False
 main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
-current_millis = 0
