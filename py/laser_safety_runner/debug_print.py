@@ -1,21 +1,15 @@
-
 #############################################################################
 # Class: Debugger
 # Description: class with mostly static methods for developer to use to help
 #              troubleshoot desired sections of code.
 #############################################################################
 class Debugger:
-    # flag to indicate whether console should print debug statements
-    is_debug_on = False
-
     ###################################################
-    # Name: ctor
-    # Description: constructor that takes a bool as a
-    #              flag to indicate whether to print
-    #              the debug statements.
+    # Name: default ctor
+    # Description: Constructor that init's debug to off
     ###################################################
-    def __init__(self, is_debug_on):
-        self.is_debug_on = is_debug_on
+    def __init__(self):
+        self.is_debug_on = False
 
     #########################################################################
     # Name: run_debug_prints_for_inputs
@@ -24,33 +18,43 @@ class Debugger:
     #########################################################################
     @staticmethod
     def print_byte_arr(byte_arr):
-        i = 0
+        index = 0
         for b in byte_arr:  # print the bytes as integers
             print("byte{0}: {1}".format(str(i), bin(int(b))))
-            i += 1
+            index += 1
         print("\n")
 
     ##############################################################################
     # Name: print_serial_exception
     # Description: debugging method that prints a msg indicating a serial message
     ##############################################################################
-    @staticmethod
-    def print_serial_exception(byte_name_str):
-        print("Serial exception on writing " + str(byte_name_str))
+    def print_serial_exception(self, byte_name_str):
+        if self.is_debug_on is True:
+            print("Serial exception on writing " + str(byte_name_str))
 
     ##############################################################################
     # Name: print_no_com_port_for_platform
     # Description: debugging method that prints a msg indicating com port
     #              failure on a specific platform
     ##############################################################################
-    @staticmethod
-    def print_no_com_port_for_platform(platform):
-        print("Failed to connect to any available com port on platform:" + str(platform))
+    def print_no_com_port_for_platform(self, platform):
+        if self.is_debug_on is True:
+            print("Failed to connect to any available com port on platform:" + str(platform))
 
-    @staticmethod
-    def print_com_port(port):
-        print("Curr communication port: " + port)
+    ##############################################################################
+    # Name: print_com_port
+    # Description: debugging method that prints a msg indicating com port
+    #              passed in as a param
+    ##############################################################################
+    def print_com_port(self, port):
+        if self.is_debug_on is True:
+            print("Curr communication port: " + port)
 
-    @staticmethod
-    def print_bad_ard_response(response):
-        print("Unexpected Arduino response: " + str(response))
+    ##############################################################################
+    # Name: print_bad_ard_response
+    # Description: debugging method that prints a msg indicating an unexpected
+    #              Arduino response and the unexpected response
+    ##############################################################################
+    def print_bad_ard_response(self, response):
+        if self.is_debug_on is True:
+            print("Unexpected Arduino response: " + str(response))

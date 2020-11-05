@@ -1,7 +1,9 @@
 ###########################################################################################
 # byte_manip.py - contains utility methods for manipulating bytes into ints and vice-versa
 ###########################################################################################
-import globals_and_consts as c
+import masks as m
+import serial_flags_and_vars as s
+import img_path as path
 
 
 #######################################################################################
@@ -10,6 +12,7 @@ import globals_and_consts as c
 #              positions in an integer. That integer is returned.
 #######################################################################################
 def byte_arr_to_int(byte_arr):
+    print("byte_manip.byte_arr_to_int")
     # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
     return int(byte_arr[1]) | int((byte_arr[2]) << 4) |\
            int((byte_arr[3]) << 8) | int((byte_arr[4]) << 12)
@@ -21,9 +24,10 @@ def byte_arr_to_int(byte_arr):
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
+    print("byte_manip.is_input_valid")
     # make sure data bytes don't have header bits set
     if input_byte_arr[1] >= 16 or input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16 or\
-            input_byte_arr[4] >= 16 or input_byte_arr[5] == c.MAGIC_BYTE:
+            input_byte_arr[4] >= 16 or input_byte_arr[5] == s.MAGIC_BYTE:
         return False
     return True
 
@@ -34,31 +38,32 @@ def is_input_valid(input_byte_arr):
 #              path as a string.
 #######################################################################################
 def get_display_image_path(input_int):
+    print("byte_manip.get_display_image_path")
     states = hash_state(input_int)
-    if states[c.LASER_FIRE_MASK]:
-        return c.LASER_FIRE_IMG
-    elif states[c.THRESHOLD_MASK]:
-        return c.LASER_FIRE_IMG
-    elif states[c.SHUTTER_MASK]:
-        return c.LASER_FIRE_IMG
-    elif states[c.PROGRAM_MASK]:
-        return c.LASER_FIRE_IMG
-    elif states[c.ESTOP_MASK]:
-        return c.ESTOP_IMG
-    elif states[c.SAFETY_CIRCUIT_MASK]:
-        return c.SAFETY_CIRCUIT_IMG
-    elif states[c.DEFEAT_SAFETY_MASK]:
-        return c.DEFEAT_SAFETY_IMG
-    elif states[c.WARNING_MASK]:
-        return c.WARNING_IMG
-    elif states[c.FAULT_MASK]:
-        return c.FAULT_IMG
-    elif states[c.SLEEP_MASK]:
-        return c.SLEEP_IMG
-    elif states[c.FIBER_ERROR_MASK]:
-        return c.FIBER_ERROR_IMG
+    if states[m.LASER_FIRE_MASK]:
+        return path.LASER_FIRE_IMG
+    elif states[m.THRESHOLD_MASK]:
+        return path.LASER_FIRE_IMG
+    elif states[m.SHUTTER_MASK]:
+        return path.LASER_FIRE_IMG
+    elif states[m.PROGRAM_MASK]:
+        return path.LASER_FIRE_IMG
+    elif states[m.ESTOP_MASK]:
+        return path.ESTOP_IMG
+    elif states[m.SAFETY_CIRCUIT_MASK]:
+        return path.SAFETY_CIRCUIT_IMG
+    elif states[m.DEFEAT_SAFETY_MASK]:
+        return path.DEFEAT_SAFETY_IMG
+    elif states[m.WARNING_MASK]:
+        return path.WARNING_IMG
+    elif states[m.FAULT_MASK]:
+        return path.FAULT_IMG
+    elif states[m.SLEEP_MASK]:
+        return path.SLEEP_IMG
+    elif states[m.FIBER_ERROR_MASK]:
+        return path.FIBER_ERROR_IMG
     else:
-        return c.NO_LOAD_IMG
+        return path.NO_LOAD_IMG
 
 
 ######################################################################################
@@ -67,10 +72,11 @@ def get_display_image_path(input_int):
 #              was set.
 ######################################################################################
 def hash_state(state):
-    return {c.LASER_FIRE_MASK: (state & c.LASER_FIRE_MASK) > 0,
-            c.THRESHOLD_MASK: (state & c.THRESHOLD_MASK) > 0, c.SHUTTER_MASK: (state & c.SHUTTER_MASK) > 0,
-            c.PROGRAM_MASK: (state & c.PROGRAM_MASK) > 0, c.ESTOP_MASK: (state & c.ESTOP_MASK) > 0,
-            c.SAFETY_CIRCUIT_MASK: (state & c.SAFETY_CIRCUIT_MASK) > 0,
-            c.DEFEAT_SAFETY_MASK: (state & c.DEFEAT_SAFETY_MASK) > 0,
-            c.WARNING_MASK: (state & c.WARNING_MASK) > 0, c.FAULT_MASK: (state & c.FAULT_MASK) > 0,
-            c.SLEEP_MASK: (state & c.SLEEP_MASK) > 0, c.FIBER_ERROR_MASK: (state & c.FIBER_ERROR_MASK) > 0}
+    print("byte_manip.hash_state")
+    return {m.LASER_FIRE_MASK: (state & m.LASER_FIRE_MASK) > 0,
+            m.THRESHOLD_MASK: (state & m.THRESHOLD_MASK) > 0, m.SHUTTER_MASK: (state & m.SHUTTER_MASK) > 0,
+            m.PROGRAM_MASK: (state & m.PROGRAM_MASK) > 0, m.ESTOP_MASK: (state & m.ESTOP_MASK) > 0,
+            m.SAFETY_CIRCUIT_MASK: (state & m.SAFETY_CIRCUIT_MASK) > 0,
+            m.DEFEAT_SAFETY_MASK: (state & m.DEFEAT_SAFETY_MASK) > 0,
+            m.WARNING_MASK: (state & m.WARNING_MASK) > 0, m.FAULT_MASK: (state & m.FAULT_MASK) > 0,
+            m.SLEEP_MASK: (state & m.SLEEP_MASK) > 0, m.FIBER_ERROR_MASK: (state & m.FIBER_ERROR_MASK) > 0}

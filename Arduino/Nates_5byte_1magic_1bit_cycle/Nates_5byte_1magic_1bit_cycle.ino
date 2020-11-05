@@ -20,7 +20,7 @@ void checkIfPiIsReady(){
     Serial.write(HANDSHAKE);
     byte reply = Serial.read();
     Serial.print(reply);
-    if(reply != 0) {
+    if(reply == MAGIC_BYTE) {
       isPiReady = true;
       delay(DELAY);
     }
