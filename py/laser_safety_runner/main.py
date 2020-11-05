@@ -11,9 +11,6 @@ import resources.colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *
-import time
-import debug_print as debug
-import img_path.img_paths as img_paths
 
 
 #########################################################################
@@ -41,19 +38,19 @@ def open_port_and_flag_result():
                                 timeout=gc.SERIAL_TIMEOUT)
         sfv.ser.write(sfv.MAGIC_BYTE)  # send a call
         response = sfv.ser.read()  # get response
+
         # set flag to indicate port open
         # initialize and make contact with input device
         if response != 0:
-            sfv.is_com_port_open = True
             set_open_port_flags()
             return True
         else:
             print("unexpected response from input device upon opening port.")
             return False
     # something went wrong with serial com port
-    except serial.SerialException or serial.serialutil.SerialException:
+    except serial.SerialException:
         # set flag for is port open to false
-        sfv.is_com_port_open = False
+        invalidate_open_port_flags()
         # update display with a waiting for response from input device
         display_system_waiting(gc.WAITING_FOR_INPUT_DEVICE_MSG, True)
         # failed, so return false
@@ -65,28 +62,27 @@ def open_port_and_flag_result():
 # Description: helper method to update the image, scale it, center,
 #              and render the changes
 #######################################################################
-def update_image(img):
+def update_image():
     # if s.CHECK_ARD_TIMEOUT <= (datetime.now().microsecond - s.last_clock.microsecond):
     #     gc.last_clock = datetime.now()
     #     s.ser.write(s.CONTACT_TO_ARD_FLAG_BYTE)
 
-    # load image with pygame
-    py_img = pygame.image.load(img)
-
     # change stuff only if stuff changed
-    if py_img != gc.py_img_last:
+    if gc.py_img != gc.py_img_last:
+        # load image with pygame
+        gc.py_img = pygame.image.load(gc.img)
         # scale image to 95% of screen wid and hit
-        py_img = pygame.transform.scale(py_img, (int(0.95 * gc.DISPLAY_WIDTH), int(0.95 * gc.DISPLAY_HEIGHT)))
+        gc.py_img = pygame.transform.scale(gc.py_img, (int(0.95 * gc.DISPLAY_WIDTH), int(0.95 * gc.DISPLAY_HEIGHT)))
         # get reference to the image rectangle
-        rect = py_img.get_rect()
+        rect = gc.py_img.get_rect()
         # recenter rectangle so there is an even amount of border on each side
         rect = rect.move(int(0.05 * gc.DISPLAY_WIDTH / 2), int(0.05 * gc.DISPLAY_HEIGHT / 2))
         # only update UI if image path changed
-        gc.py_img_last = py_img
+        gc.py_img_last = gc.py_img
         # background color
         gc.main_canvas.fill(c.BLACK)
         # draw image
-        gc.main_canvas.blit(py_img, rect)
+        gc.main_canvas.blit(gc.py_img, rect)
         # render changes
         pygame.display.update()
 
@@ -98,7 +94,7 @@ def update_image(img):
 def handle_serial_exception():
     print("handling serial exception")
     # indicate com port is closed
-    sfv.is_com_port_open = False
+    invalidate_open_port_flags()
     # show waiting for device response
     display_system_waiting(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
     # render changes
@@ -121,10 +117,6 @@ def read_input_bytes():
         except serial.SerialException:  # read failed
             # set proper flags to indicate port needs to be re-opened
             handle_serial_exception()
-    else:
-        determine_platform_and_connect()
-        # if debug is not None:
-        #     debug.Debugger.print_byte_arr(s.serial_in_buffer)
 
 
 ####################################################################
@@ -132,40 +124,34 @@ def read_input_bytes():
 # Description: method that sets COM_PORT to system dependent syntax
 ####################################################################
 def determine_platform_and_connect():
-    # see if we're on windows platform
+
     if sfv.this_platform == gc.WIN:
-        # try to connect to each, see if a response from the arduino returns
+        gc.COM_PORT = "COM5"
         if open_port_and_flag_result():
-            print("Successfully opened port and flagged results")
             set_open_port_flags()
             return True
-        else:
-            for com in range(9):  # iterate through all possible COM ports
-                gc.COM_PORT = "COM" + str(com)
+        if not gc.found_platform:
+            for com_num in range(9):  # iterate through all possible COM ports
+                gc.COM_PORT = "COM" + str(com_num)
                 try:
                     # try to connect to each, see if a response from the arduino returns
                     if open_port_and_flag_result():
                         set_open_port_flags()
-                        print("Connected to COM: " + gc.COM_PORT)
-                        break
+                        return True
                 except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                     continue
-    elif sfv.this_platform == gc.LIN:
-        try:
-            # try to connect to each, see if a response from the arduino returns
-            if open_port_and_flag_result():
-                set_open_port_flags()
-        except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-            handle_serial_exception()
-            return False
-        else:
-            for index in range(9):  # iterate through all possible COM ports
-                gc.COM_PORT = "dev/ttyUSB" + str(index)
+
+    if sfv.this_platform == gc.LIN:
+        if is_port_set():
+            for i in range(9):  # iterate through all possible COM ports
+                gc.COM_PORT = "/dev/ttyUSB" + str(i)
                 try:
                     # try to connect to each, see if a response from the arduino returns
                     if open_port_and_flag_result():
                         set_open_port_flags()
                         break
+                    else:
+                        invalidate_open_port_flags()
                 except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                     handle_serial_exception()
                     continue
@@ -176,6 +162,12 @@ def set_open_port_flags():
     sfv.HAS_PORT_CONNECTED = True
     sfv.is_com_port_open = True
     sfv.FOUND_PLATFORM = True
+
+
+def invalidate_open_port_flags():
+    sfv.HAS_PORT_CONNECTED = False
+    sfv.is_com_port_open = False
+    sfv.FOUND_PLATFORM = False
 
 
 def is_port_set():
@@ -206,7 +198,6 @@ def display_system_waiting(msg, is_init_screen):
         gc.main_canvas.blit(text, text_rect)
         pygame.display.update()
     except pygame.error():
-        pygame.quit()
         return
 
 
@@ -219,8 +210,10 @@ def loop():
     # check if the port is open, if not try and set it up
     if not is_port_set():
         setup(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
+        set_open_port_flags()
         if not open_port_and_flag_result():  # open port failed, so make sure flag is set and return
             handle_serial_exception()
+            invalidate_open_port_flags()
             return
     # successful port open, so start loop
     else:
@@ -229,7 +222,7 @@ def loop():
             # make sure there's a buffer and the input is valid
             if b_manip.is_input_valid(sfv.serial_in_buffer):
                 gc.img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(sfv.serial_in_buffer))
-                update_image(gc.img)
+                update_image()
 
 
 ##################################################################################################
@@ -249,7 +242,7 @@ def setup(display_msg, is_init):
 
 # int main()
 if __name__ == '__main__':
-    setup(gc.OPENING_COM_PORTS, True)
+    setup(gc.OPENING_COM_PORTS_MSG, True)
     # void loop()
     while True:
         loop()

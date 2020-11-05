@@ -14,8 +14,7 @@ import img_path as path
 def byte_arr_to_int(byte_arr):
     print("byte_manip.byte_arr_to_int")
     # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
-    return int(byte_arr[1]) | int((byte_arr[2]) << 4) |\
-           int((byte_arr[3]) << 8) | int((byte_arr[4]) << 12)
+    return int(byte_arr[0]) | int((byte_arr[1]) << 4) | int((byte_arr[2]) << 8) | int((byte_arr[3]) << 12)
 
 
 #######################################################################################
@@ -24,11 +23,13 @@ def byte_arr_to_int(byte_arr):
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
-    print("byte_manip.is_input_valid")
+    if len(input_byte_arr) != 5:
+        return False
     # make sure data bytes don't have header bits set
     if input_byte_arr[1] >= 16 or input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16 or\
             input_byte_arr[4] >= 16 or input_byte_arr[5] == s.MAGIC_BYTE:
         return False
+    print("byte_manip.is_input_valid")
     return True
 
 
