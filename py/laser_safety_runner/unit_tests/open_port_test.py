@@ -4,7 +4,7 @@
 
 # imports
 import unittest
-import serial_flags_and_vars as sfv
+from vars_consts import serial_flags_and_vars as sfv
 import main
 
 

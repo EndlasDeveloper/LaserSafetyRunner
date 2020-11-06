@@ -4,7 +4,7 @@
 
 # imports
 import unittest
-from byte_manip import *
+from manip.byte_manip import *
 import resources.img_paths as p
 
 

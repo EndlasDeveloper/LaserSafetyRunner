@@ -1,9 +1,7 @@
 ###########################################################################################
 # byte_manip.py - contains utility methods for manipulating bytes into ints and vice-versa
 ###########################################################################################
-import masks as m
-import serial_flags_and_vars as s
-import globals_and_consts as c
+from vars_consts import serial_flags_and_vars as s, globals_and_consts as c, masks as m
 import resources.img_paths as path
 
 
