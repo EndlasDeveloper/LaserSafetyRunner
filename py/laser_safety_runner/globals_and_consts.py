@@ -41,7 +41,6 @@ OPENING_COM_PORTS_MSG = "Finding open COM port..."
 DISPLAY_WIDTH = 640
 DISPLAY_HEIGHT = 480
 
-debug = debug.Debugger()
 img = None
 
 # not actually constants, but need to be away from main

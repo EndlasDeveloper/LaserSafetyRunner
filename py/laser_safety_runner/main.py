@@ -38,11 +38,17 @@ def open_port_and_flag_result():
         sfv.ser = serial.Serial(port=gc.COM_PORT, baudrate=gc.BAUD_RATE, bytesize=gc.BYTE_SIZE,
                                 timeout=gc.SERIAL_TIMEOUT)
         response = sfv.ser.read()  # get response
+        # cast response into an int
         response = int.from_bytes(response, gc.ENDIAN, signed=False)
+        # verify response
         if response == 255:
+            # write back a magic byte
             sfv.ser.write(b'/x1')
+            # read serial into an int
             second_response = int.from_bytes(sfv.ser.read(), gc.ENDIAN, signed=False)
+            # verify response
             if second_response == 0:
+                # device connect success, so set connected flags
                 set_open_port_flags()
                 return True
         else:
@@ -108,6 +114,7 @@ def read_input_bytes():
     try:
         # try and read in the correct byte arr size
         sfv.serial_in_buffer = sfv.ser.read(gc.READ_BYTE_SIZE)
+        # this just prints the read byte array to console
         debug.Debugger.print_byte_arr(sfv.serial_in_buffer)
         return True
         # walk through the buffer and verify
@@ -126,8 +133,9 @@ def determine_platform_and_connect():
         gc.COM_PORT = "COM5"
         if open_port_and_flag_result():
             return True
+        # com 5 didn't work, so try 'em all
         if not gc.found_platform:
-            for com_num in range(9):  # iterate through all possible COM ports
+            for com_num in range(9):
                 gc.COM_PORT = "COM" + str(com_num)
                 try:
                     # try to connect to each, see if a response from the arduino returns
@@ -143,11 +151,11 @@ def determine_platform_and_connect():
                 try:
                     # try to connect to each, see if a response from the arduino returns
                     if open_port_and_flag_result():
-                        break
+                        return True
                 except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                     handle_serial_exception()
                     continue
-    return True
+    return False
 
 
 #########################################################
