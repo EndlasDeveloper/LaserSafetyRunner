@@ -103,11 +103,7 @@ void checkInputs() {    //Check inputs and send bytes if any changes
   bitWrite(inputs, 15, !digitalRead(9));
   if (inputs != lastInputs) {
     lastInputs = inputs;
-    return 1;
-  }
-  else
-  {
-    return 0;
+    send_uint32_in_halfByteArray(inputs);
   }
 }
 
