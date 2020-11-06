@@ -1,3 +1,6 @@
+##########################################################################
+# masks.py - script file holding all masks for deciphering bit positions
+##########################################################################
 
 # LASER FIRE BYTE MASKS
 LASER_FIRE_MASK = 0x1

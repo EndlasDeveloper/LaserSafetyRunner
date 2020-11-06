@@ -1,3 +1,10 @@
+##############################################################
+# serial_flags_and_vars.py - vars to hold the serial
+#   port flags to indicate whether connection has been make,
+#   and other serial related data structures
+##############################################################
+
+# imports
 import datetime as dt
 import serial
 import platform
@@ -19,5 +26,6 @@ CHECK_ARD_TIMEOUT = 1000
 IS_SER_EX_HANDLED = False
 this_platform = platform.system()
 
+# serial port and flag
 ser = serial.Serial()
 is_com_port_open = False
