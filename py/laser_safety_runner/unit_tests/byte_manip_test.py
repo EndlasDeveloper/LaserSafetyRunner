@@ -5,7 +5,7 @@
 # imports
 import unittest
 from byte_manip import *
-import img_path.img_paths as p
+import resources.img_paths as p
 
 
 class ByteManipTestsByteArrToInt(unittest.TestCase):

@@ -4,7 +4,7 @@
 import masks as m
 import serial_flags_and_vars as s
 import globals_and_consts as c
-import img_path.img_paths as path
+import resources.img_paths as path
 
 
 #######################################################################################
