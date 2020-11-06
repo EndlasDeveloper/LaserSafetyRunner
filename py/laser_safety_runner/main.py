@@ -191,7 +191,7 @@ def display_system_waiting(msg, is_init_screen):
         # initialize pygame
         pygame.init()
         # set window title message
-        pygame.display.set_caption(gc.DISPLAY_CAPTION)
+        pygame.display.set_caption(gc.DISPLAY_CAPTION_MSG)
         # set font for the waiting for reply msg
         font = pygame.font.Font(gc.DISPLAY_FONT, gc.DISPLAY_FONT_SIZE)
         # set the text str, background color, and text color
