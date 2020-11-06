@@ -6,7 +6,6 @@
 import pygame
 import datetime as dt
 import serial
-import debug_print as debug
 
 # SYSTEMS
 WIN = 'Windows'
@@ -55,6 +54,7 @@ serial_in_buffer = []
 serial_count = 0
 inputs_from_ard = 0
 COM_PORT_INDEX = int(1)
+COM_PORT_PREFIX = ""
 main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
 py_img_last = None
 py_img = ""

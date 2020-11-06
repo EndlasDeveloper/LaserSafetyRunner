@@ -59,7 +59,6 @@ def open_port_and_flag_result():
         return False
 
 
-
 #######################################################################
 # Name: update_image
 # Description: helper method to update the image, scale it, center,
@@ -127,27 +126,19 @@ def read_input_bytes():
 ####################################################################
 def determine_platform_and_connect():
     if sfv.this_platform == gc.WIN:
+        gc.COM_PORT_PREFIX = "COM"
         sfv.FOUND_PLATFORM = True
-        for com_num in range(9):
-            gc.COM_PORT = "COM" + str(com_num)
-            # try to connect to each, see if a response from the arduino returns
-            if open_port_and_flag_result():
-                set_open_port_flags()
-                return True
-            else:
-                continue
-
-    elif sfv.this_platform == gc.LIN:
+    if sfv.this_platform == gc.LIN:
+        gc.COM_PORT_PREFIX = "/dev/ttyUSB"
         sfv.FOUND_PLATFORM = True
-        for i in range(9):  # iterate through all possible COM ports
-            gc.COM_PORT = "/dev/ttyUSB" + str(i)
-            try:
-                # try to connect to each, see if a response from the arduino returns
-                if open_port_and_flag_result():
-                    return True
-            except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-                handle_serial_exception()
-                continue
+    for com_num in range(9):
+        gc.COM_PORT = gc.COM_PORT_PREFIX + str(com_num)
+        # try to connect to each, see if a response from the arduino returns
+        if open_port_and_flag_result():
+            set_open_port_flags()
+            return True
+        else:
+            continue
     return False
 
 
