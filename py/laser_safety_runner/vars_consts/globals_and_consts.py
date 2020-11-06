@@ -14,7 +14,7 @@ RASP = 'raspberrypi'
 LIN = 'Linux'
 
 # COM PORT AND PORT SPECS
-COM_PORT = "COM5"
+COM_PORT = ""
 CONTACT_TO_ARD_FLAG_BYTE = b'/xAA'
 RESET_COUNTS_FLAG_BYTE = b'/x99'
 

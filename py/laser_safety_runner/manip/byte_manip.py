@@ -25,7 +25,7 @@ def is_input_valid(input_byte_arr):
     # make sure
     if len(input_byte_arr) != c.READ_BYTE_SIZE:
         return False
-    # make sure data bytes don't have header bits set
+    # make sure data bytes don't have header bits set, and vice-versa for the magic byte
     if input_byte_arr[0] > 15 or input_byte_arr[1] > 15 or input_byte_arr[2] > 15 or\
        input_byte_arr[3] > 15 or input_byte_arr[4] < s.MAGIC_BYTE:
         return False

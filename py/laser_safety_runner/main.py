@@ -32,34 +32,32 @@ def setup_pygame_events():
 #              open.
 #############################################################################
 def open_port_and_flag_result():
+
     try:
         # open USB port
         sfv.ser = serial.Serial(port=gc.COM_PORT, baudrate=gc.BAUD_RATE, bytesize=gc.BYTE_SIZE,
                                 timeout=gc.SERIAL_TIMEOUT)
+
+        print(gc.COM_PORT)
         response = sfv.ser.read()  # get response
         # cast response into an int
         response = int.from_bytes(response, gc.ENDIAN, signed=False)
+        print(response)
         # verify response
         if response == 255:
             # write back a magic byte
             sfv.ser.write(b'/x1')
             # read serial into an int
             second_response = int.from_bytes(sfv.ser.read(), gc.ENDIAN, signed=False)
+            print(second_response)
             # verify response
             if second_response == 0:
                 # device connect success, so set connected flags
                 set_open_port_flags()
                 return True
-        else:
-            return False
-    # something went wrong with serial com port
     except serial.SerialException:
-        # set flag for is port open to false
-        invalidate_open_port_flags()
-        # update display with a waiting for response from input device
-        display_system_waiting(gc.WAITING_FOR_INPUT_DEVICE_MSG, True)
-        # failed, so return false
         return False
+
 
 
 #######################################################################
@@ -129,31 +127,27 @@ def read_input_bytes():
 ####################################################################
 def determine_platform_and_connect():
     if sfv.this_platform == gc.WIN:
-        gc.COM_PORT = "COM5"
-        if open_port_and_flag_result():
-            return True
-        # com 5 didn't work, so try 'em all
-        if not gc.found_platform:
-            for com_num in range(9):
-                gc.COM_PORT = "COM" + str(com_num)
-                try:
-                    # try to connect to each, see if a response from the arduino returns
-                    if open_port_and_flag_result():
-                        return True
-                except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-                    continue
+        sfv.FOUND_PLATFORM = True
+        for com_num in range(9):
+            gc.COM_PORT = "COM" + str(com_num)
+            # try to connect to each, see if a response from the arduino returns
+            if open_port_and_flag_result():
+                set_open_port_flags()
+                return True
+            else:
+                continue
 
-    if sfv.this_platform == gc.LIN:
-        if is_port_set():
-            for i in range(9):  # iterate through all possible COM ports
-                gc.COM_PORT = "/dev/ttyUSB" + str(i)
-                try:
-                    # try to connect to each, see if a response from the arduino returns
-                    if open_port_and_flag_result():
-                        return True
-                except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
-                    handle_serial_exception()
-                    continue
+    elif sfv.this_platform == gc.LIN:
+        sfv.FOUND_PLATFORM = True
+        for i in range(9):  # iterate through all possible COM ports
+            gc.COM_PORT = "/dev/ttyUSB" + str(i)
+            try:
+                # try to connect to each, see if a response from the arduino returns
+                if open_port_and_flag_result():
+                    return True
+            except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
+                handle_serial_exception()
+                continue
     return False
 
 
@@ -164,7 +158,6 @@ def determine_platform_and_connect():
 def set_open_port_flags():
     sfv.HAS_PORT_CONNECTED = True
     sfv.is_com_port_open = True
-    sfv.FOUND_PLATFORM = True
 
 
 ##################################################################
@@ -174,7 +167,6 @@ def set_open_port_flags():
 def invalidate_open_port_flags():
     sfv.HAS_PORT_CONNECTED = False
     sfv.is_com_port_open = False
-    sfv.FOUND_PLATFORM = False
 
 
 #################################################################################################
@@ -221,9 +213,6 @@ def loop():
     # check if the port is open, if not try and set it up
     if not is_port_set():
         setup(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
-        set_open_port_flags()
-        if not open_port_and_flag_result():  # open port failed, so make sure flag is set and return
-            handle_serial_exception()
     # successful port open, so start loop
     else:
         # read input from input device (fills s.serial_in_buffer)
@@ -246,12 +235,9 @@ def setup(display_msg, is_initial_setup):
     if is_initial_setup:
         display_system_waiting(display_msg, is_initial_setup)
 
-    open_port_and_flag_result()
-    # if the local systems platform can be determined
-    if is_port_set():
-        if determine_platform_and_connect():
-            set_open_port_flags()
-            print("determine plat and connect true")
+    if determine_platform_and_connect():
+        set_open_port_flags()
+        print("Connected to com: " + gc.COM_PORT)
 
 
 # int main()
