@@ -37,8 +37,8 @@ WAITING_FOR_INPUT_DEVICE_MSG = "Waiting for input device reply..."
 OPENING_COM_PORTS_MSG = "Finding open COM port..."
 
 # to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
-DISPLAY_WIDTH = 640
-DISPLAY_HEIGHT = 480
+DISPLAY_WIDTH = 960
+DISPLAY_HEIGHT = 540
 
 img = None
 

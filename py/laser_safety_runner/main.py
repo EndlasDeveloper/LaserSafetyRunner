@@ -64,7 +64,7 @@ def open_port_and_flag_result():
 # Description: helper method to update the image, scale it, center,
 #              and render the changes
 #######################################################################
-def update_image(img):
+def update_image(img , shutter_status, threshold_status,  ):
     # change stuff only if stuff changed
     if img != gc.py_img_last:
         gc.py_img_last = img
@@ -82,8 +82,33 @@ def update_image(img):
         gc.main_canvas.fill(c.BLACK)
         # draw image
         gc.main_canvas.blit(gc.py_img, rect)
+        # check shutter_status display text popup
+        if states[m.Shutter_MASK]:
+            msg = 'Shutter OPEN'
+            font = pygame.font.Font(gc.DISPLAY_FONT, gc.DISPLAY_FONT_SIZE)
+            # set the text str, background color, and text color
+            text = font.render(msg, True, c.RED, c.WHITE)
+            # center the waiting msg
+            text_rect = text.get_rect(665, 418)
+        # check threshold_status display text popup
+        if states[m.Threshold_MASK]:
+            msg = 'THRESHOLD ON'
+            font = pygame.font.Font(gc.DISPLAY_FONT, gc.DISPLAY_FONT_SIZE)
+            # set the text str, background color, and text color
+            text = font.render(msg, True, c.RED, c.WHITE)
+            # center the waiting msg
+            text_rect = text.get_rect(665, 465)
+        # check program_status display text popup
+        if states[m.Program_MASK]:
+            msg = 'PROGRAM RUNNING'
+            font = pygame.font.Font(gc.DISPLAY_FONT, gc.DISPLAY_FONT_SIZE)
+            # set the text str, background color, and text color
+            text = font.render(msg, True, c.RED, c.WHITE)
+            # center the waiting msg
+            text_rect = text.get_rect(315, 465)
         # render changes
         pygame.display.update()
+
 
 
 #######################################################################

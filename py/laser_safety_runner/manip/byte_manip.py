@@ -43,12 +43,6 @@ def get_display_image_path(input_int):
     states = hash_state(input_int)
     if states[m.LASER_FIRE_MASK]:
         return path.LASER_FIRE_IMG
-    elif states[m.THRESHOLD_MASK]:
-        return path.LASER_FIRE_IMG
-    elif states[m.SHUTTER_MASK]:
-        return path.LASER_FIRE_IMG
-    elif states[m.PROGRAM_MASK]:
-        return path.LASER_FIRE_IMG
     elif states[m.ESTOP_MASK]:
         return path.ESTOP_IMG
     elif states[m.SAFETY_CIRCUIT_MASK]:
