@@ -3,7 +3,7 @@
 ###########################################################################################
 import masks as m
 import serial_flags_and_vars as s
-import img_path as path
+import img_path.img_paths as path
 
 
 #######################################################################################
@@ -12,7 +12,7 @@ import img_path as path
 #              positions in an integer. That integer is returned.
 #######################################################################################
 def byte_arr_to_int(byte_arr):
-    print("byte_manip.byte_arr_to_int")
+    # print("byte_manip.byte_arr_to_int")
     # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
     return int(byte_arr[0]) | int((byte_arr[1]) << 4) | int((byte_arr[2]) << 8) | int((byte_arr[3]) << 12)
 
@@ -26,10 +26,10 @@ def is_input_valid(input_byte_arr):
     if len(input_byte_arr) != 5:
         return False
     # make sure data bytes don't have header bits set
-    if input_byte_arr[1] >= 16 or input_byte_arr[2] >= 16 or input_byte_arr[3] >= 16 or\
-            input_byte_arr[4] >= 16 or input_byte_arr[5] == s.MAGIC_BYTE:
+    if input_byte_arr[0] > 15 or input_byte_arr[1] > 15 or input_byte_arr[2] > 15 or\
+       input_byte_arr[3] > 15 or input_byte_arr[4] < s.MAGIC_BYTE:
         return False
-    print("byte_manip.is_input_valid")
+    # print("byte_manip.is_input_valid")
     return True
 
 
@@ -39,7 +39,7 @@ def is_input_valid(input_byte_arr):
 #              path as a string.
 #######################################################################################
 def get_display_image_path(input_int):
-    print("byte_manip.get_display_image_path")
+    # print("byte_manip.get_display_image_path")
     states = hash_state(input_int)
     if states[m.LASER_FIRE_MASK]:
         return path.LASER_FIRE_IMG
@@ -73,7 +73,7 @@ def get_display_image_path(input_int):
 #              was set.
 ######################################################################################
 def hash_state(state):
-    print("byte_manip.hash_state")
+    # print("byte_manip.hash_state")
     return {m.LASER_FIRE_MASK: (state & m.LASER_FIRE_MASK) > 0,
             m.THRESHOLD_MASK: (state & m.THRESHOLD_MASK) > 0, m.SHUTTER_MASK: (state & m.SHUTTER_MASK) > 0,
             m.PROGRAM_MASK: (state & m.PROGRAM_MASK) > 0, m.ESTOP_MASK: (state & m.ESTOP_MASK) > 0,

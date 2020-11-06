@@ -11,6 +11,7 @@ import resources.colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *
+import debug_print as debug
 
 
 #########################################################################
@@ -36,16 +37,15 @@ def open_port_and_flag_result():
         # open USB port
         sfv.ser = serial.Serial(port=gc.COM_PORT, baudrate=gc.BAUD_RATE, bytesize=gc.BYTE_SIZE,
                                 timeout=gc.SERIAL_TIMEOUT)
-        sfv.ser.write(sfv.MAGIC_BYTE)  # send a call
         response = sfv.ser.read()  # get response
-
-        # set flag to indicate port open
-        # initialize and make contact with input device
-        if response != 0:
-            set_open_port_flags()
-            return True
+        response = int.from_bytes(response, gc.ENDIAN, signed=False)
+        if response == 255:
+            sfv.ser.write(b'/x1')
+            second_response = int.from_bytes(sfv.ser.read(), gc.ENDIAN, signed=False)
+            if second_response == 0:
+                set_open_port_flags()
+                return True
         else:
-            print("unexpected response from input device upon opening port.")
             return False
     # something went wrong with serial com port
     except serial.SerialException:
@@ -62,15 +62,12 @@ def open_port_and_flag_result():
 # Description: helper method to update the image, scale it, center,
 #              and render the changes
 #######################################################################
-def update_image():
-    # if s.CHECK_ARD_TIMEOUT <= (datetime.now().microsecond - s.last_clock.microsecond):
-    #     gc.last_clock = datetime.now()
-    #     s.ser.write(s.CONTACT_TO_ARD_FLAG_BYTE)
-
+def update_image(img):
     # change stuff only if stuff changed
-    if gc.py_img != gc.py_img_last:
+    if img != gc.py_img_last:
+        gc.py_img_last = img
         # load image with pygame
-        gc.py_img = pygame.image.load(gc.img)
+        gc.py_img = pygame.image.load(img)
         # scale image to 95% of screen wid and hit
         gc.py_img = pygame.transform.scale(gc.py_img, (int(0.95 * gc.DISPLAY_WIDTH), int(0.95 * gc.DISPLAY_HEIGHT)))
         # get reference to the image rectangle
@@ -92,7 +89,6 @@ def update_image():
 # Description: routine to execute upon a serial exception being thrown
 #######################################################################
 def handle_serial_exception():
-    print("handling serial exception")
     # indicate com port is closed
     invalidate_open_port_flags()
     # show waiting for device response
@@ -109,14 +105,16 @@ def handle_serial_exception():
 #              the port
 ####################################################################
 def read_input_bytes():
-    if is_port_set():
-        try:
-            # try and read in the correct byte arr size
-            sfv.serial_in_buffer = sfv.ser.read(gc.READ_BYTE_SIZE)
-            # walk through the buffer and verify
-        except serial.SerialException:  # read failed
-            # set proper flags to indicate port needs to be re-opened
-            handle_serial_exception()
+    try:
+        # try and read in the correct byte arr size
+        sfv.serial_in_buffer = sfv.ser.read(gc.READ_BYTE_SIZE)
+        debug.Debugger.print_byte_arr(sfv.serial_in_buffer)
+        return True
+        # walk through the buffer and verify
+    except serial.SerialException:  # read failed
+        # set proper flags to indicate port needs to be re-opened
+        handle_serial_exception()
+        return False
 
 
 ####################################################################
@@ -124,11 +122,9 @@ def read_input_bytes():
 # Description: method that sets COM_PORT to system dependent syntax
 ####################################################################
 def determine_platform_and_connect():
-
     if sfv.this_platform == gc.WIN:
         gc.COM_PORT = "COM5"
         if open_port_and_flag_result():
-            set_open_port_flags()
             return True
         if not gc.found_platform:
             for com_num in range(9):  # iterate through all possible COM ports
@@ -136,7 +132,6 @@ def determine_platform_and_connect():
                 try:
                     # try to connect to each, see if a response from the arduino returns
                     if open_port_and_flag_result():
-                        set_open_port_flags()
                         return True
                 except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                     continue
@@ -148,28 +143,37 @@ def determine_platform_and_connect():
                 try:
                     # try to connect to each, see if a response from the arduino returns
                     if open_port_and_flag_result():
-                        set_open_port_flags()
                         break
-                    else:
-                        invalidate_open_port_flags()
                 except ModuleNotFoundError:  # failed to connect to arduino so continue trying other ports
                     handle_serial_exception()
                     continue
     return True
 
 
+#########################################################
+# Name: set_open_port_flags
+# Description: helper method that sets the port flags to open
+#########################################################
 def set_open_port_flags():
     sfv.HAS_PORT_CONNECTED = True
     sfv.is_com_port_open = True
     sfv.FOUND_PLATFORM = True
 
 
+##################################################################
+# Name: invalidate_open_port_flags
+# Description: helper method that invalidates port flags to open
+##################################################################
 def invalidate_open_port_flags():
     sfv.HAS_PORT_CONNECTED = False
     sfv.is_com_port_open = False
     sfv.FOUND_PLATFORM = False
 
 
+#################################################################################################
+# Name: is_port_set
+# Description: returns bool describing whether the port is set and ready to communicate through
+#################################################################################################
 def is_port_set():
     return sfv.HAS_PORT_CONNECTED & sfv.is_com_port_open & sfv.FOUND_PLATFORM
 
@@ -213,16 +217,16 @@ def loop():
         set_open_port_flags()
         if not open_port_and_flag_result():  # open port failed, so make sure flag is set and return
             handle_serial_exception()
-            invalidate_open_port_flags()
-            return
     # successful port open, so start loop
     else:
         # read input from input device (fills s.serial_in_buffer)
         if read_input_bytes():
+            debug.Debugger.print_byte_arr(sfv.serial_in_buffer)
             # make sure there's a buffer and the input is valid
             if b_manip.is_input_valid(sfv.serial_in_buffer):
-                gc.img = b_manip.get_display_image_path(b_manip.byte_arr_to_int(sfv.serial_in_buffer))
-                update_image()
+                image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(sfv.serial_in_buffer))
+                print("image: " + image)
+                update_image(image)
 
 
 ##################################################################################################
@@ -230,13 +234,16 @@ def loop():
 # Description: helper method to initialize counter variables, display a startup msg/img while
 #              system finished initializing, and initializes and signals the arduino
 ##################################################################################################
-def setup(display_msg, is_init):
+def setup(display_msg, is_initial_setup):
     # display image indicating searching for com ports
-    if is_init:
-        display_system_waiting(display_msg, is_init)
+    if is_initial_setup:
+        display_system_waiting(display_msg, is_initial_setup)
+
+    open_port_and_flag_result()
     # if the local systems platform can be determined
     if is_port_set():
         if determine_platform_and_connect():
+            set_open_port_flags()
             print("determine plat and connect true")
 
 

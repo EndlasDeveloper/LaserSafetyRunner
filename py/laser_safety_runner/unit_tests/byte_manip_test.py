@@ -5,6 +5,7 @@
 # imports
 import unittest
 from byte_manip import *
+import img_path.img_paths as p
 
 
 class ByteManipTestsByteArrToInt(unittest.TestCase):
@@ -109,39 +110,39 @@ class ByteManipTestsIsInputValid(unittest.TestCase):
 class ByteManipTestsGetDisplayImagePath(unittest.TestCase):
     def test_get_display_image_path_byte_zero(self):
         result_img_path = get_display_image_path(1)
-        self.assertEqual(c.LASER_FIRE_IMG, result_img_path)
+        self.assertEqual(p.LASER_FIRE_IMG, result_img_path)
 
         result_img_path = get_display_image_path(2)
-        self.assertEqual(c.LASER_FIRE_IMG, result_img_path)
+        self.assertEqual(p.LASER_FIRE_IMG, result_img_path)
 
         result_img_path = get_display_image_path(4)
-        self.assertEqual(c.LASER_FIRE_IMG, result_img_path)
+        self.assertEqual(p.LASER_FIRE_IMG, result_img_path)
 
         result_img_path = get_display_image_path(8)
-        self.assertEqual(c.LASER_FIRE_IMG, result_img_path)
+        self.assertEqual(p.LASER_FIRE_IMG, result_img_path)
 
     def test_get_display_image_path_byte_one(self):
         result_img_path = get_display_image_path(16)
-        self.assertEqual(c.ESTOP_IMG, result_img_path)
+        self.assertEqual(p.ESTOP_IMG, result_img_path)
 
         result_img_path = get_display_image_path(32)
-        self.assertEqual(c.SAFETY_CIRCUIT_IMG, result_img_path)
+        self.assertEqual(p.SAFETY_CIRCUIT_IMG, result_img_path)
 
         result_img_path = get_display_image_path(64)
-        self.assertEqual(c.DEFEAT_SAFETY_IMG, result_img_path)
+        self.assertEqual(p.DEFEAT_SAFETY_IMG, result_img_path)
 
         result_img_path = get_display_image_path(128)
-        self.assertEqual(c.WARNING_IMG, result_img_path)
+        self.assertEqual(p.WARNING_IMG, result_img_path)
 
     def test_get_display_image_path_byte_two(self):
         result_img_path = get_display_image_path(256)
-        self.assertEqual(c.FAULT_IMG, result_img_path)
+        self.assertEqual(p.FAULT_IMG, result_img_path)
 
         result_img_path = get_display_image_path(512)
-        self.assertEqual(c.SLEEP_IMG, result_img_path)
+        self.assertEqual(p.SLEEP_IMG, result_img_path)
 
         result_img_path = get_display_image_path(1024)
-        self.assertEqual(c.FIBER_ERROR_IMG, result_img_path)
+        self.assertEqual(p.FIBER_ERROR_IMG, result_img_path)
 
 
 # int main()

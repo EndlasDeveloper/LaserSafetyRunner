@@ -4,7 +4,7 @@
 #define BAUD_RATE 115200
 
 static const int DELAY = 1500;
-static uint8_t bytesToWrite[5] = {1, 0, 0, 0, 240};
+static uint8_t bytesToWrite[NUMBER_OF_BYTES] = {1, 0, 0, 0, 240};
 static bool isPiReady = false;
 
 void setup() {
@@ -18,12 +18,11 @@ static uint32_t numChecks = 0;
 void checkIfPiIsReady(){
   if(Serial) {
     Serial.write(HANDSHAKE);
+    delay(DELAY);
     byte reply = Serial.read();
-    Serial.print(reply);
-    if(reply == MAGIC_BYTE) {
+    if(reply)
       isPiReady = true;
-      delay(DELAY);
-    }
+    delay(DELAY);
   }
 }
   

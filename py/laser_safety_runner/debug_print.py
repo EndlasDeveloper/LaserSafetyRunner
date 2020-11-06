@@ -20,7 +20,7 @@ class Debugger:
     def print_byte_arr(byte_arr):
         index = 0
         for b in byte_arr:  # print the bytes as integers
-            print("byte{0}: {1}".format(str(i), bin(int(b))))
+            print("byte{0}: {1}".format(str(index), bin(int(b))))
             index += 1
         print("\n")
 
