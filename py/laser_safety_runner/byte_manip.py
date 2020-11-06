@@ -3,6 +3,7 @@
 ###########################################################################################
 import masks as m
 import serial_flags_and_vars as s
+import globals_and_consts as c
 import img_path.img_paths as path
 
 
@@ -23,7 +24,8 @@ def byte_arr_to_int(byte_arr):
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
-    if len(input_byte_arr) != 5:
+    # make sure
+    if len(input_byte_arr) != c.READ_BYTE_SIZE:
         return False
     # make sure data bytes don't have header bits set
     if input_byte_arr[0] > 15 or input_byte_arr[1] > 15 or input_byte_arr[2] > 15 or\
