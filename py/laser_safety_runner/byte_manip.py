@@ -3,7 +3,7 @@
 ###########################################################################################
 import masks as m
 import globals_and_consts as c
-import resources.img_paths as path
+import img_paths as path
 
 
 #######################################################################################

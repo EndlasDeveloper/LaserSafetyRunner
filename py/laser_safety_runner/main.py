@@ -7,7 +7,7 @@ import serial_flags_and_vars as sfv
 import globals_and_consts as gc
 import byte_manip as b_manip
 import serial
-import resources.colors as c
+import colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *

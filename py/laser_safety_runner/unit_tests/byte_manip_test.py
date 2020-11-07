@@ -5,7 +5,7 @@
 # imports
 import unittest
 from byte_manip import *
-import resources.img_paths as p
+import img_paths as p
 
 
 ############################################################################
