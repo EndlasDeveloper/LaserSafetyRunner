@@ -18,10 +18,9 @@ class Debugger:
     #########################################################################
     @staticmethod
     def print_byte_arr(byte_arr):
-        index = 0
-        for b in byte_arr:  # print the bytes as integers
-            print("byte{0}: {1}".format(str(index), bin(int(b))))
-            index += 1
+        for index in range(6):  # print the bytes as integers
+            temp = bytes(byte_arr[index])
+            print(bin(int.from_bytes(temp, 'big', signed=False)))
         print("\n")
 
     ##############################################################################

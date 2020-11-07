@@ -10,6 +10,9 @@ import resources.colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *
+import time
+import threading
+import multiprocessing
 import debug_print as debug
 
 
@@ -32,7 +35,6 @@ def setup_pygame_events():
 #              open.
 #############################################################################
 def open_port_and_flag_result():
-
     try:
         # open USB port
         sfv.ser = serial.Serial(port=gc.COM_PORT, baudrate=gc.BAUD_RATE, bytesize=gc.BYTE_SIZE,
@@ -44,17 +46,13 @@ def open_port_and_flag_result():
         response = int.from_bytes(response, gc.ENDIAN, signed=False)
         print(response)
         # verify response
-        if response == 255:
+        if response == 1:
             # write back a magic byte
             sfv.ser.write(b'/x1')
-            # read serial into an int
-            second_response = int.from_bytes(sfv.ser.read(), gc.ENDIAN, signed=False)
-            print(second_response)
-            # verify response
-            if second_response == 0:
-                # device connect success, so set connected flags
-                set_open_port_flags()
-                return True
+            set_open_port_flags()
+            return True
+        else:
+            return False
     except serial.SerialException:
         return False
 
@@ -107,17 +105,34 @@ def handle_serial_exception():
 #              the port
 ####################################################################
 def read_input_bytes():
-    try:
-        # try and read in the correct byte arr size
-        sfv.serial_in_buffer = sfv.ser.read(gc.READ_BYTE_SIZE)
-        # this just prints the read byte array to console
-        debug.Debugger.print_byte_arr(sfv.serial_in_buffer)
-        return True
-        # walk through the buffer and verify
-    except serial.SerialException:  # read failed
-        # set proper flags to indicate port needs to be re-opened
-        handle_serial_exception()
-        return False
+    while sfv.ser.in_waiting > 0:
+        try:
+            # try and read in the correct byte arr size
+            gc.serial_in_buffer[gc.serial_count] = sfv.ser.read()
+            if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) > 127 or \
+                    gc.serial_count >= 5:
+                if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) & (1 << 6) > 0:
+                    sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
+
+                if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) & (1 << 5) > 0:
+                    gc.inputs_from_ard = int.from_bytes(gc.serial_in_buffer[gc.serial_count - 1], 'big', signed=False) << 12 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 2], 'big', signed=False) << 8 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 3], 'big', signed=False) << 4 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 4], 'big', signed=False)
+
+                    if gc.serial_in_buffer[gc.serial_count - 5] == gc.inputs_from_ard % 128:
+                        sfv.ser.write(gc.serial_in_buffer[gc.serial_count - 5])
+                else:
+                    print("Checksum didn't match!")
+                gc.serial_count = 0
+            else:
+                gc.serial_count += 1
+            # # this just prints the read byte array to console
+            # debug.Debugger.print_byte_arr(gc.serial_in_buffer)
+            # walk through the buffer and verify
+        except serial.SerialException:  # read failed
+            # set proper flags to indicate port needs to be re-opened
+            handle_serial_exception()
 
 
 ####################################################################
@@ -206,14 +221,18 @@ def loop():
         setup(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
     # successful port open, so start loop
     else:
-        # read input from input device (fills s.serial_in_buffer)
-        if read_input_bytes():
-            debug.Debugger.print_byte_arr(sfv.serial_in_buffer)
-            # make sure there's a buffer and the input is valid
-            if b_manip.is_input_valid(sfv.serial_in_buffer):
-                image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(sfv.serial_in_buffer))
-                print("image: " + image)
-                update_image(image)
+        t = threading.Thread(target=read_input_bytes(), args=(2,))
+        t.start()
+        t.join()
+        time.sleep(2)
+        if b_manip.is_input_valid(gc.serial_in_buffer):
+            print("is valid")
+            image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(gc.serial_in_buffer))
+            print("image: " + image)
+            update_image(image)
+        debug.Debugger.print_byte_arr(gc.serial_in_buffer)
+        # make sure there's a buffer and the input is valid
+        # time.sleep(0.5)
 
 
 ##################################################################################################
