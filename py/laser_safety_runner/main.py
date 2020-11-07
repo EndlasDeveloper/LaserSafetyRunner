@@ -3,8 +3,9 @@
 ####################################################################
 
 # imports
-from vars_consts import serial_flags_and_vars as sfv, globals_and_consts as gc
-from manip import byte_manip as b_manip
+import serial_flags_and_vars as sfv
+import globals_and_consts as gc
+import byte_manip as b_manip
 import serial
 import resources.colors as c
 import pygame

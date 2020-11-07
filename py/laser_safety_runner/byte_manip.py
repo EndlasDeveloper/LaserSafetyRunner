@@ -1,7 +1,8 @@
 ###########################################################################################
 # byte_manip.py - contains utility methods for manipulating bytes into ints and vice-versa
 ###########################################################################################
-from vars_consts import globals_and_consts as c, masks as m
+import masks as m
+import globals_and_consts as c
 import resources.img_paths as path
 
 
@@ -14,9 +15,9 @@ def byte_arr_to_int(byte_arr):
     # print("byte_manip.byte_arr_to_int")
     # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
     i1 = byte_to_int(bytes(byte_arr[1]))
-    i2 = byte_to_int(bytes(byte_arr[2]))
-    i3 = byte_to_int(bytes(byte_arr[3]))
-    i4 = byte_to_int(bytes(byte_arr[4]))
+    i2 = (byte_to_int(bytes(byte_arr[2])) << 4)
+    i3 = (byte_to_int(bytes(byte_arr[3])) << 8)
+    i4 = (byte_to_int(bytes(byte_arr[4])) << 12)
     return i1 | i2 | i3 | i4
 
 
