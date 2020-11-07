@@ -24,6 +24,9 @@ def setup_pygame_events():
     for event in pygame.event.get():
         if event.type == QUIT:
             gc.is_com_port_open = False
+        elif event.type == pygame.KEYDOWN:
+            pygame.quit()
+            exit()
 
 
 #############################################################################
