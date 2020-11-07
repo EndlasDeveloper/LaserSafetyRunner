@@ -4,7 +4,7 @@
 
 # imports
 import pygame
-import datetime as dt
+import time
 import serial
 
 # SYSTEMS
@@ -49,8 +49,9 @@ is_com_port_open = False
 found_platform = False
 
 # initialize countdown for checking the arduino
-last_clock = dt.datetime.now()
-serial_in_buffer = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+last_clock = None
+init_clock = None
+serial_in_buffer = [0, 0, 0, 0, 0, 0]
 serial_count = 0
 inputs_from_ard = 0
 COM_PORT_INDEX = int(1)

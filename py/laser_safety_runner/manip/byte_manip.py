@@ -1,7 +1,7 @@
 ###########################################################################################
 # byte_manip.py - contains utility methods for manipulating bytes into ints and vice-versa
 ###########################################################################################
-from vars_consts import serial_flags_and_vars as s, globals_and_consts as c, masks as m
+from vars_consts import globals_and_consts as c, masks as m
 import resources.img_paths as path
 
 
@@ -13,7 +13,18 @@ import resources.img_paths as path
 def byte_arr_to_int(byte_arr):
     # print("byte_manip.byte_arr_to_int")
     # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
-    return int(byte_arr[1]) | int((byte_arr[2]) << 4) | int((byte_arr[3]) << 8) | int((byte_arr[4]) << 12)
+    i1 = byte_to_int(bytes(byte_arr[1]))
+    i2 = byte_to_int(bytes(byte_arr[2]))
+    i3 = byte_to_int(bytes(byte_arr[3]))
+    i4 = byte_to_int(bytes(byte_arr[4]))
+    return i1 | i2 | i3 | i4
+
+
+def byte_to_int(byte):
+    int_frm_byte = 0
+    for b in byte:
+        int_frm_byte = int_frm_byte * 256 + int(b)
+    return int_frm_byte
 
 
 #######################################################################################
@@ -22,14 +33,15 @@ def byte_arr_to_int(byte_arr):
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
-    # make sure
+    # make sure input arr is the right size
     if len(input_byte_arr) != c.READ_BYTE_SIZE:
         return False
     # make sure data bytes don't have header bits set, and vice-versa for the magic byte
-    if input_byte_arr[1] > 15 or input_byte_arr[2] > 15 or input_byte_arr[3] > 15 or\
-       input_byte_arr[4] > 15 or input_byte_arr[5] != s.MAGIC_BYTE:
+    if byte_to_int(bytes(input_byte_arr[1])) > 15 or byte_to_int(bytes(input_byte_arr[2])) > 15 or \
+            byte_to_int(bytes(input_byte_arr[3])) > 15 or byte_to_int(bytes(input_byte_arr[4])) > 15:
         return False
-    # print("byte_manip.is_input_valid")
+    if byte_to_int(bytes(input_byte_arr[5])) & 0x80 == 0:
+        return False
     return True
 
 

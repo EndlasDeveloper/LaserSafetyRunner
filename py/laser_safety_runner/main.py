@@ -10,9 +10,8 @@ import resources.colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *
-import time
 import threading
-import multiprocessing
+import time
 import debug_print as debug
 
 
@@ -115,10 +114,14 @@ def read_input_bytes():
                     sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
 
                 if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) & (1 << 5) > 0:
-                    gc.inputs_from_ard = int.from_bytes(gc.serial_in_buffer[gc.serial_count - 1], 'big', signed=False) << 12 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 2], 'big', signed=False) << 8 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 3], 'big', signed=False) << 4 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 4], 'big', signed=False)
+                    gc.inputs_from_ard = int.from_bytes(gc.serial_in_buffer[gc.serial_count - 1],
+                                                        gc.ENDIAN, signed=False) << 12 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 2], gc.ENDIAN,
+                                                        signed=False) << 8 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 3], gc.ENDIAN,
+                                                        signed=False) << 4 |\
+                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 4], gc.ENDIAN,
+                                                        signed=False)
 
                     if gc.serial_in_buffer[gc.serial_count - 5] == gc.inputs_from_ard % 128:
                         sfv.ser.write(gc.serial_in_buffer[gc.serial_count - 5])
@@ -210,6 +213,45 @@ def display_system_waiting(msg, is_init_screen):
         return
 
 
+def check_time_for_ard():
+    gc.last_clock = time.perf_counter()
+
+    if gc.last_clock - gc.init_clock >= 2:
+
+        gc.init_clock = time.perf_counter()
+        gc.last_clock = time.perf_counter()
+        try:
+            sfv.ser.write(0xAA)
+            for i in range(6):
+                gc.serial_in_buffer[i] = sfv.ser.read()
+                gc.inputs_from_ard = b_manip.byte_arr_to_int(gc.serial_in_buffer)
+            sfv.ser.flushInput()
+
+            if int.from_bytes(gc.serial_in_buffer[0], 'big', signed=False) == gc.inputs_from_ard % 128:
+                sfv.ser.write(gc.serial_in_buffer[0])
+                return True
+            else:
+                print("Checksum didn't match.")
+                print(gc.serial_in_buffer)
+        except serial.SerialException:
+            return False
+    return False
+
+
+def thread_read_input():
+    t = threading.Thread(target=read_input_bytes(), args=(1,))
+    t.start()
+    t.join()
+
+
+def check_and_update_img():
+    if b_manip.is_input_valid(gc.serial_in_buffer):
+        print("is valid")
+        image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(gc.serial_in_buffer))
+        print("image: " + image)
+        update_image(image)
+
+
 #######################################################################
 # Name: loop
 # Description: main function body to be looped through
@@ -219,17 +261,10 @@ def loop():
     # check if the port is open, if not try and set it up
     if not is_port_set():
         setup(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
+
     # successful port open, so start loop
-    else:
-        t = threading.Thread(target=read_input_bytes(), args=(2,))
-        t.start()
-        t.join()
-        time.sleep(2)
-        if b_manip.is_input_valid(gc.serial_in_buffer):
-            print("is valid")
-            image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(gc.serial_in_buffer))
-            print("image: " + image)
-            update_image(image)
+    if check_time_for_ard():
+        check_and_update_img()
         debug.Debugger.print_byte_arr(gc.serial_in_buffer)
         # make sure there's a buffer and the input is valid
         # time.sleep(0.5)
@@ -252,6 +287,7 @@ def setup(display_msg, is_initial_setup):
 
 # int main()
 if __name__ == '__main__':
+    gc.init_clock = time.perf_counter()
     setup(gc.OPENING_COM_PORTS_MSG, True)
     # void loop()
     while True:
