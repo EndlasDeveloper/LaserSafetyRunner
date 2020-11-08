@@ -41,6 +41,7 @@ def is_input_valid(input_byte_arr):
     if byte_to_int(bytes(input_byte_arr[1])) > 15 or byte_to_int(bytes(input_byte_arr[2])) > 15 or \
             byte_to_int(bytes(input_byte_arr[3])) > 15 or byte_to_int(bytes(input_byte_arr[4])) > 15:
         return False
+    # check if MSB on terminating byte is set
     if byte_to_int(bytes(input_byte_arr[5])) & 0x80 == 0:
         return False
     return True

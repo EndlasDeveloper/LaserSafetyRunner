@@ -6,12 +6,12 @@
 import serial_flags_and_vars as sfv
 import globals_and_consts as gc
 import byte_manip as b_manip
+import masks as m
 import serial
 import colors as c
 import pygame
 import serial.tools.list_ports
 from pygame.locals import *
-import threading
 import time
 import debug_print as debug
 
@@ -22,11 +22,10 @@ import debug_print as debug
 #########################################################################
 def setup_pygame_events():
     for event in pygame.event.get():
-        if event.type == QUIT:
-            gc.is_com_port_open = False
-        elif event.type == pygame.KEYDOWN:
-            pygame.quit()
-            exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                pygame.quit()
+                exit()
 
 
 #############################################################################
@@ -51,7 +50,7 @@ def open_port_and_flag_result():
         # verify response
         if response == 1:
             # write back a magic byte
-            sfv.ser.write(b'/x1')
+            sfv.ser.write(int.to_bytes(response, length=1, byteorder=gc.ENDIAN, signed=False))
             set_open_port_flags()
             return True
         else:
@@ -109,29 +108,28 @@ def handle_serial_exception():
 ####################################################################
 def read_input_bytes():
     while sfv.ser.in_waiting > 0:
+        if gc.serial_count == 6:
+            gc.serial_count = 0
         try:
-            # try and read in the correct byte arr size
+            # try and read in the next byte
             gc.serial_in_buffer[gc.serial_count] = sfv.ser.read()
-            if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) > 127 or \
-                    gc.serial_count >= 5:
-                if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) & (1 << 6) > 0:
-                    sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
+            # if header bits are set in data bytes or the serial count exceeds the buffer size
+            if gc.serial_count >= 5:
+                # check if the ard reset counts bit is set, if so, send signal to ard to reset counts
+                if b_manip.byte_to_int(gc.serial_in_buffer[gc.serial_count]) & m.ARD_RESET_MASK > 0:
+                    print("Arduino triggered the watchdog")
+                    # sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
 
-                if int.from_bytes(gc.serial_in_buffer[gc.serial_count], gc.ENDIAN, signed=False) & (1 << 5) > 0:
-                    gc.inputs_from_ard = int.from_bytes(gc.serial_in_buffer[gc.serial_count - 1],
-                                                        gc.ENDIAN, signed=False) << 12 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 2], gc.ENDIAN,
-                                                        signed=False) << 8 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 3], gc.ENDIAN,
-                                                        signed=False) << 4 |\
-                                         int.from_bytes(gc.serial_in_buffer[gc.serial_count - 4], gc.ENDIAN,
-                                                        signed=False)
+                # check if the ard inputs ready bit is set, if so, read in the 6 bytes from the ard
+                if b_manip.byte_to_int(gc.serial_in_buffer[gc.serial_count]) & m.ARD_REPORT_ERROR_MASK > 0:
+                    print("Arduino reporting at least 1 error")
+                gc.inputs_from_ard = b_manip.byte_arr_to_int(gc.serial_in_buffer)
 
-                    if gc.serial_in_buffer[gc.serial_count - 5] == gc.inputs_from_ard % 128:
-                        sfv.ser.write(gc.serial_in_buffer[gc.serial_count - 5])
+                if gc.serial_in_buffer[0] == gc.inputs_from_ard % 128:
+                    print("Checksum matched!")
+                    sfv.ser.write(gc.serial_in_buffer[0])
                 else:
-                    print("Checksum didn't match!")
-                gc.serial_count = 0
+                    print("Checksum didn't match :/")
             else:
                 gc.serial_count += 1
             # # this just prints the read byte array to console
@@ -226,34 +224,30 @@ def check_time_for_ard():
         gc.last_clock = time.perf_counter()
         try:
             sfv.ser.write(0xAA)
-            for i in range(6):
-                gc.serial_in_buffer[i] = sfv.ser.read()
-                gc.inputs_from_ard = b_manip.byte_arr_to_int(gc.serial_in_buffer)
-            sfv.ser.flushInput()
-
-            if int.from_bytes(gc.serial_in_buffer[0], 'big', signed=False) == gc.inputs_from_ard % 128:
-                sfv.ser.write(gc.serial_in_buffer[0])
+            read_input_bytes()
+            print("checksum: " + str(b_manip.byte_to_int(bytes(gc.serial_in_buffer[0]))))
+            print("modded ard input: " + str(gc.inputs_from_ard % 128))
+            if b_manip.byte_to_int(bytes(gc.serial_in_buffer[1])) == gc.inputs_from_ard % 128:
+                sfv.ser.write(gc.serial_in_buffer[1])
                 return True
             else:
                 print("Checksum didn't match.")
-                print(gc.serial_in_buffer)
+                temp = []
+                for index in range(6):
+                    temp.append(b_manip.byte_to_int(bytes(gc.serial_in_buffer[index])))
+                print(temp)
         except serial.SerialException:
             return False
     return False
 
 
-def thread_read_input():
-    t = threading.Thread(target=read_input_bytes(), args=(1,))
-    t.start()
-    t.join()
-
-
 def check_and_update_img():
     if b_manip.is_input_valid(gc.serial_in_buffer):
-        print("is valid")
+        print("is valid input")
         image = b_manip.get_display_image_path(b_manip.byte_arr_to_int(gc.serial_in_buffer))
         print("image: " + image)
         update_image(image)
+    print("invalid input")
 
 
 #######################################################################
@@ -267,7 +261,7 @@ def loop():
         setup(gc.WAITING_FOR_INPUT_DEVICE_MSG, False)
 
     # successful port open, so start loop
-    if check_time_for_ard():
+    if is_port_set() and check_time_for_ard():
         check_and_update_img()
         debug.Debugger.print_byte_arr(gc.serial_in_buffer)
         # make sure there's a buffer and the input is valid
