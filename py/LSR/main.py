@@ -1,4 +1,4 @@
-import globals as g
+import app_vars as g
 from laser_safety_runner import LaserSafetyRunner
 
 # Press the green button in the gutter to run the script.
