@@ -74,14 +74,17 @@ class LaserSafetyRunner:
 
     def run(self):
         while True:
-            self._init_threads()
-            # if arduino listener thread isn't alive, spin one up
-            if not g.arduino_thread.is_alive():
-                g.arduino_thread.start()
-            # if enough time has elapsed and the thread isn't alive, spin up a ui thread update
-            if time.perf_counter() - self.t0 >= 1.5 and not g.ui_thread.is_alive():
-                g.ui_thread.start()
-            while g.arduino_thread.is_alive():
-                g.arduino_thread.join(THREAD_JOIN_TIMEOUT)
-            while g.ui_thread.is_alive():
-                g.ui_thread.join(THREAD_JOIN_TIMEOUT)
+            try:
+                self._init_threads()
+                # if arduino listener thread isn't alive, spin one up
+                if not g.arduino_thread.is_alive():
+                    g.arduino_thread.start()
+                # if enough time has elapsed and the thread isn't alive, spin up a ui thread update
+                if time.perf_counter() - self.t0 >= 1.5 and not g.ui_thread.is_alive():
+                    g.ui_thread.start()
+                while g.arduino_thread.is_alive():
+                    g.arduino_thread.join(THREAD_JOIN_TIMEOUT)
+                while g.ui_thread.is_alive():
+                    g.ui_thread.join(THREAD_JOIN_TIMEOUT)
+            except BaseException:
+                return False
