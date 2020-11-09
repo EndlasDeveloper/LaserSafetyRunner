@@ -218,12 +218,11 @@ def display_system_waiting(msg, is_init_screen):
 def check_time_for_ard():
     gc.last_clock = time.perf_counter()
 
-    if gc.last_clock - gc.init_clock >= 2:
-
+    if gc.last_clock - gc.init_clock >= 1:
         gc.init_clock = time.perf_counter()
         gc.last_clock = time.perf_counter()
         try:
-            sfv.ser.write(0xAA)
+            # sfv.ser.write(170)
             read_input_bytes()
             print("checksum: " + str(b_manip.byte_to_int(bytes(gc.serial_in_buffer[0]))))
             print("modded ard input: " + str(gc.inputs_from_ard % 128))
@@ -248,6 +247,7 @@ def check_and_update_img():
         print("image: " + image)
         update_image(image)
     print("invalid input")
+    # sfv.ser.flushInput()
 
 
 #######################################################################

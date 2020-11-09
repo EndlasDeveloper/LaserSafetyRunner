@@ -20,7 +20,7 @@ class Debugger:
     def print_byte_arr(byte_arr):
         for index in range(6):  # print the bytes as integers
             temp = bytes(byte_arr[index])
-            print(bin(int.from_bytes(temp, 'big', signed=False)))
+            print((int.from_bytes(temp, 'big', signed=False)))
         print("\n")
 
     ##############################################################################

@@ -38,7 +38,7 @@ void setup() {
   Serial.begin(115200);
   while(!hasRPiResponded)
     waitForRPi();
-  Serial.println("Im up!");
+  //Serial.println("Im up!");
 }
 
 void waitForRPi(){
@@ -66,17 +66,17 @@ void loop() {
       }
       if (inByte == CONTACT_FROM_PI) {
         contactFromPi = true;
-        Serial.println("CONTACT_FROM_PI");
+        //Serial.println("CONTACT_FROM_PI");
         send_uint32_in_halfByteArray(inputs);
         //digitalWrite(0,HIGH);
       }
     }
     else {
       expectingCheckSumResponse = false;
-      Serial.print("recieved    ---checkSum: ");
-      Serial.print(inByte,DEC);
-      Serial.print(" in: ");
-      Serial.println(millis() - previousMillis);
+//      Serial.print("recieved    ---checkSum: ");
+//      Serial.print(inByte,DEC);
+//      Serial.print(" in: ");
+//      Serial.println(millis() - previousMillis);
     }
   }
 
@@ -149,16 +149,16 @@ void printBits(uint32_t myByte, uint32_t numBits) {
     and any MagicStatusByte will be >127.
 */
 void send_uint32_in_halfByteArray(uint32_t uint32) {
-  uint8_t checkSum = uint32 % 128;
-  uint8_t SerialOutBuffer[6] = {0};
+  byte checkSum = uint32 % 128;
+  uint8_t SerialOutBuffer[6] = {byte(0)};
   magicStatusByte = (1 << 7) | (watchdogTriggered << 6)  | (noResponseErr << 5) | ErrCount;
 
   SerialOutBuffer[0] = checkSum;
-  SerialOutBuffer[1] = uint32 & 0x0F;
-  SerialOutBuffer[2] = (uint32 >> 4) & 0x0F;
-  SerialOutBuffer[3] = (uint32 >> 8) & 0x0F;
-  SerialOutBuffer[4] = (uint32 >> 12) & 0x0F;
-  SerialOutBuffer[5] = magicStatusByte;
+  SerialOutBuffer[1] = byte(uint32 & 0x0F);
+  SerialOutBuffer[2] = byte((uint32 >> 4) & 0x0F);
+  SerialOutBuffer[3] = byte((uint32 >> 8) & 0x0F);
+  SerialOutBuffer[4] = byte((uint32 >> 12) & 0x0F);
+  SerialOutBuffer[5] = byte(magicStatusByte);
   delay(1500);
   Serial.write(SerialOutBuffer, 6);
   delay(1500);
