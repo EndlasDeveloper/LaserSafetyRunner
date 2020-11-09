@@ -81,10 +81,13 @@ class LaserSafetyRunner:
                     g.arduino_thread.start()
                 # if enough time has elapsed and the thread isn't alive, spin up a ui thread update
                 if time.perf_counter() - self.t0 >= 1.5 and not g.ui_thread.is_alive():
+                    # reset base time reference
+                    self.t0 = time.perf_counter()
                     g.ui_thread.start()
-                while g.arduino_thread.is_alive():
+                if g.arduino_thread.is_alive():
                     g.arduino_thread.join(THREAD_JOIN_TIMEOUT)
-                while g.ui_thread.is_alive():
+                if g.ui_thread.is_alive():
                     g.ui_thread.join(THREAD_JOIN_TIMEOUT)
+
             except BaseException:
                 return False
