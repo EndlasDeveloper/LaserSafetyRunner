@@ -161,7 +161,7 @@ void send_uint32_in_halfByteArray(uint32_t uint32) {
   SerialOutBuffer[5] = byte(magicStatusByte);
   delay(1500);
   Serial.write(SerialOutBuffer, 6);
-  delay(1500);
+  delay(2000);
   Serial.print("transmitting---checkSum: ");
   Serial.println(checkSum);
   expectingCheckSumResponse = true;

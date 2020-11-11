@@ -45,7 +45,7 @@ class Display:
         elif av.is_com_port_open:
             # acquire data buffer mutex lock
             # copy the data buffer
-            self.buffer = av.data_buffer
+            self.buffer = av.arduino_data_buffer
             self._update_pygame_image()
         # release the data buffer mutex
         av.data_buffer_mutex.release()

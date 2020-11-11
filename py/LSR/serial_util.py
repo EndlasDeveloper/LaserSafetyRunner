@@ -34,24 +34,24 @@ def byte_to_int(byte):
 def is_port_set():
     return av.has_port_connected_before & av.is_com_port_open & av.found_platform
 
+
 #######################################################################################
 # Name: is_input_valid
 # Description: takes a byte array as a parameter. Method returns whether the byte arr
 #              input is a valid input or not as a bool
 #######################################################################################
-@staticmethod
 def is_input_valid(input_byte_arr):
-    # make sure input arr is the right size
-    if len(input_byte_arr) != READ_BYTE_SIZE:
-        print("is_input_valid: the size of the byte array is not c.READ_BYTE_SIZE")
-        return False
     # make sure data bytes don't have header bits set, and vice-versa for the magic byte
     if byte_to_int(bytes(input_byte_arr[1])) > 15 or byte_to_int(bytes(input_byte_arr[2])) > 15 or \
             byte_to_int(bytes(input_byte_arr[3])) > 15 or byte_to_int(bytes(input_byte_arr[4])) > 15:
         print("is_input_valid: data bytes weren't set properly")
+        av.arduino_data_buffer.clear()
         return False
+    else:
+        print("data bytes are valid")
     # check if MSB on terminating byte is set
     if byte_to_int(bytes(input_byte_arr[5])) < 128:
         print("is_input_valid: magic byte wasn't set properly")
         return False
+    print("magic byte was set properly")
     return True

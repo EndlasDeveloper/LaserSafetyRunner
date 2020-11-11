@@ -1,10 +1,11 @@
 # imports
 from threading import Thread
-from arduino_listener import ArduinoListener
+from arduino_serial_manager import ArduinoSerialManager
 import app_vars as av
 from constant_serial import *
+from serial_util import is_port_set
 from constant_display import BASE_UI_REFRESH_RATE
-from time import perf_counter
+from time import perf_counter, sleep
 # from display import Display
 
 
@@ -24,13 +25,7 @@ class LaserSafetyRunner:
 
     def __init__(self):
         # self.display = Display()
-        self.ard_listener = ArduinoListener()
-        self.arduino_thread: Thread = Thread()
-        self.display_thread: Thread = Thread()
-        self.threads = []
-        # init data buffer arr to size of data packets
-        for i in range(DATA_PACKET_SIZE):
-            av.data_buffer.append(0)
+        self.ard_listener = ArduinoSerialManager()
 
         # initialize the ui and arduino threads
         # initialize the base time reference
@@ -41,24 +36,36 @@ class LaserSafetyRunner:
         self.init_serial_to_arduino()
 
     def run(self):
+        arduino_thread = None
         while True:
             try:
-                if not self.arduino_thread.is_alive() or self.arduino_thread is None:
-                    self.arduino_thread = Thread(name="Arduino Thread",
-                                                 target=self.ard_listener.start_reading_from_serial(), args=())
-                    self.threads.append(self.arduino_thread)
-                    self.arduino_thread.start()
+                if arduino_thread is None or not arduino_thread.is_alive():
+                    arduino_thread = Thread(name="Arduino Thread",
+                                                 target=self.ard_listener.start_reading_from_serial(), args=(),
+                                                 daemon=True)
+                    arduino_thread.start()
 
+                arduino_thread.join(0.5)
+                if av.reset_serial_connection:
+                    self.init_serial_to_arduino()
+                    av.reset_serial_connection = False
+
+
+                # if arduino_thread.is_alive():
+                #     print("ard thread is alive")
+                # else:
+                #     print("ard thread is ded")
                 # if not self.display_thread.is_alive() and not self.arduino_thread.is_alive() and\
                 #         perf_counter() - self.t0 >= BASE_UI_REFRESH_RATE:
                 #     self.t0 = perf_counter()
-                #     self.display_thread = Thread(name="Display Thread", target=self.display.update_display(), args=())
+                #     self.display_thread = Thread(name="Display Thread", target=self.display.update_display(), args=(),
+                #     daemon=True)
                 #     self.threads.append(self.display_thread)
                 #     self.display_thread.start()
 
-                if self.arduino_thread.is_alive():
-                    self.arduino_thread.join(THREAD_JOIN_ARDUINO_TIMEOUT)
                 # if self.display_thread.is_alive():
                 #     self.display_thread.join(THREAD_JOIN_DISPLAY_TIMEOUT)
             except BaseException:
+                from traceback import print_exc
+                print_exc()
                 return False
