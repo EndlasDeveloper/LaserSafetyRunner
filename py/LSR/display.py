@@ -1,17 +1,17 @@
-from constant import *
-from const_colors import *
-from const_masks import *
+from constant_serial import *
+from constant_mask import *
 from const_img_paths import *
+from constant_display import *
 import app_vars as av
 import pygame
 
 
-class UI:
+class Display:
     def __init__(self):
         self.buffer = []
-        self.state = -1
+        self.state = 0
         self.img_path = ""
-        self.setup_pygame_events()
+        self._setup_pygame_events()
 
     @staticmethod
     def display_system_waiting(msg, is_init_screen):
@@ -35,7 +35,8 @@ class UI:
         except pygame.error():
             return
 
-    def update_ui(self):
+    def update_display(self):
+        av.data_buffer_mutex.acquire(blocking=True, timeout=MUTEX_ACQUIRE_TIMEOUT_ARDUINO)
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
@@ -43,12 +44,11 @@ class UI:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
         elif av.is_com_port_open:
             # acquire data buffer mutex lock
-            av.data_buffer_mutex.acquire(blocking=True, timeout=MUTEX_ACQUIRE_TIMEOUT)
             # copy the data buffer
             self.buffer = av.data_buffer
-            # release the data buffer mutex
-            av.data_buffer_mutex.release()
-            self.update_image()
+            self._update_pygame_image()
+        # release the data buffer mutex
+        av.data_buffer_mutex.release()
 
     #######################################################################################
     # Name: _get_display_image_path
@@ -97,11 +97,11 @@ class UI:
                 SLEEP_MASK: (self.state & SLEEP_MASK) > 0, FIBER_ERROR_MASK: (self.state & FIBER_ERROR_MASK) > 0}
 
     #######################################################################
-    # Name: update_image
+    # Name: _update_pygame_image
     # Description: helper method to update the image, scale it, center,
     #              and render the changes
     #######################################################################
-    def update_image(self):
+    def _update_pygame_image(self):
         self.img_path = self._get_display_image_path()
         print("img path: " + self.img_path)
         # change stuff only if stuff changed
@@ -123,11 +123,14 @@ class UI:
             pygame.display.update()
 
     @staticmethod
-    def setup_pygame_events():
+    def _setup_pygame_events():
+        # get all events
         for event in pygame.event.get():
+            # when a key is pressed
             if event.type == pygame.KEYDOWN:
+                # if the key is esc or q, the program exits gracefully
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     pygame.quit()
-                    exit(1)
+                    exit(0)
 
 

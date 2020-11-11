@@ -1,8 +1,8 @@
 from serial import Serial
-from threading import Thread, Lock
+from threading import Lock
 from platform import system
 from pygame import display, FULLSCREEN
-from constant import DISPLAY_WIDTH, DISPLAY_HEIGHT
+from constant_display import DISPLAY_WIDTH, DISPLAY_HEIGHT
 
 this_platform = system()
 data_buffer = []
@@ -16,7 +16,7 @@ found_platform = False
 ser = Serial()
 serial_count = 0
 inputs_from_ard = 0
-main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
+# main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
 
 py_img_last = ""
 py_img = None

@@ -1,5 +1,5 @@
 import app_vars as av
-from constant import READ_BYTE_SIZE
+from constant_serial import READ_BYTE_SIZE
 
 #######################################################################################
 # Name: byte_arr_to_int
