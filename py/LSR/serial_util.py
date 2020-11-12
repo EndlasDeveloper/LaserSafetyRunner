@@ -1,6 +1,7 @@
 import app_vars as av
 from constant_serial import READ_BYTE_SIZE
 
+
 #######################################################################################
 # Name: byte_arr_to_int
 # Description: accepts an array of 5 bytes and ors them into their respective relative
@@ -45,7 +46,7 @@ def is_input_valid(input_byte_arr):
     if byte_to_int(bytes(input_byte_arr[1])) > 15 or byte_to_int(bytes(input_byte_arr[2])) > 15 or \
             byte_to_int(bytes(input_byte_arr[3])) > 15 or byte_to_int(bytes(input_byte_arr[4])) > 15:
         print("is_input_valid: data bytes weren't set properly")
-        av.arduino_data_buffer.clear()
+        av.shared_data_buffer.clear()
         return False
     else:
         print("data bytes are valid")
