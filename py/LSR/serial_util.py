@@ -32,7 +32,7 @@ def byte_to_int(byte):
 # Description: returns bool describing whether the port is set and ready to communicate through
 #################################################################################################
 def is_port_set():
-    return av.has_port_connected_before & av.is_com_port_open & av.found_platform
+    return av.has_port_connected_before and av.is_com_port_open and av.found_platform
 
 
 #######################################################################################

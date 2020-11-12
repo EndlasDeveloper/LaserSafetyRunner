@@ -6,12 +6,13 @@ from constant_display import DISPLAY_WIDTH, DISPLAY_HEIGHT
 
 this_platform = system()
 arduino_data_buffer = []
-shared_data_buffer = []
+arduino_data_buffer_copy = []
 data_buffer_mutex = Lock()
 laser_safety_runner = None
 com_port = ""
+return_val = []
 
-has_port_connected_before = False
+has_port_connected_before = None
 is_com_port_open = False
 found_platform = False
 reset_serial_connection = False

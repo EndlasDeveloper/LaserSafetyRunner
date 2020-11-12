@@ -36,19 +36,23 @@ class Display:
             return
 
     def update_display(self):
-        av.data_buffer_mutex.acquire(blocking=True, timeout=MUTEX_ACQUIRE_TIMEOUT_ARDUINO)
         # display waiting message if com port connection failure
+        print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " + str(av.has_port_connected_before))
         if not av.is_com_port_open and not av.has_port_connected_before:
-            self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
-        elif not av.is_com_port_open and av.has_port_connected_before:
+            self.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
+        elif not av.is_com_port_open and av.has_port_connected_before and av.found_platform:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
-        elif av.is_com_port_open:
-            # acquire data buffer mutex lock
-            # copy the data buffer
-            self.buffer = av.arduino_data_buffer
+        else:
+            print("\ncom port open\n")
+            av.data_buffer_mutex.acquire(blocking=True, timeout=MUTEX_ACQUIRE_TIMEOUT_ARDUINO)
+            try:
+                print("display: acquired mutex")
+                self.buffer = av.arduino_data_buffer_copy
+            finally:
+                av.data_buffer_mutex.release()
+
             self._update_pygame_image()
         # release the data buffer mutex
-        av.data_buffer_mutex.release()
 
     #######################################################################################
     # Name: _get_display_image_path

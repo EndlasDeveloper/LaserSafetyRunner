@@ -40,15 +40,18 @@ class ArduinoSerialManager:
                                     timeout=SERIAL_TIMEOUT)
             print(av.com_port)
 
+            response = None
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
-            response = av.ser.read()  # get response
+            sleep(1)
+            response = av.ser.read()
+            print("response: " + str(response))
+
             # cast response into an int
-            response = int.from_bytes(response, ENDIAN, signed=False)
+
             # verify response
-            if response == 1:
+            if response == b'p':
                 # write back a magic byte
-                av.ser.write(int.to_bytes(response, length=1, byteorder=ENDIAN, signed=False))
                 self.set_open_port_flags()
                 return True
             else:
@@ -74,7 +77,6 @@ class ArduinoSerialManager:
             av.com_port = com_port_prefix + str(com_num)
             # try to connect to each, see if a response from the arduino returns
             if self.open_port_and_flag_result():
-                self.set_open_port_flags()
                 return True
         return False
 
@@ -87,53 +89,60 @@ class ArduinoSerialManager:
     ####################################################################
 
     def start_reading_from_serial(self):
+        av.ser.write(RESET_COUNTS)
+        av.ser.write(CONTACT_TO_ARD)
         while av.ser.in_waiting > 0:
             try:
-                # signal arduino
-                if len(av.arduino_data_buffer) == 0:
-                    av.ser.write(RESET_COUNTS)
-                    av.ser.write(CONTACT_TO_ARD)
-                    sleep(1)
-                    # give arduino time to clear its vars and send a response
-                    response = av.ser.read()
-                    av.serial_count = 0
-                    if not response == b'\x01':
-                        print("arduino didn't send a 1")
-
-                print("serial count:" + str(av.serial_count))
-                for b in av.ser.read():
-                    av.arduino_data_buffer.append(int.to_bytes(b, 1, byteorder=ENDIAN, signed=False))
-                    sleep(1)
-
-                print("buffer: " + str(av.arduino_data_buffer))
+                av.arduino_data_buffer.append(av.ser.read())
+                if len(av.arduino_data_buffer) == 6 and av.arduino_data_buffer[5] == b'':
+                    if not is_input_valid(av.arduino_data_buffer()):
+                        av.arduino_data_buffer.clear()
+                        av.return_val.clear()
+                        av.return_val.append(av.arduino_data_buffer_copy)
+                        return
                 # if header bits are set in data bytes or the serial count exceeds the buffer size
                 if len(av.arduino_data_buffer) > 5:
-                    # check if the ard reset counts bit is set, if so, send signal to ard to reset counts
-                    if byte_to_int(av.arduino_data_buffer[5]) & ARD_RESET_MASK > 0:
-                        print("Arduino triggered the watchdog")
-                        # sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
-
-                    # check if the ard inputs ready bit is set, if so, read in the 6 bytes from the ard
-                    if byte_to_int(av.arduino_data_buffer[5]) & ARD_REPORT_ERROR_MASK > 0:
-                        print("Arduino reporting at least 1 error")
-
-                    if is_input_valid(av.arduino_data_buffer):
-                        av.inputs_from_ard = byte_arr_to_int(av.arduino_data_buffer)
-
-                        if av.arduino_data_buffer[0] == av.inputs_from_ard % 128:
-                            print("Checksum matched!")
-                            av.ser.write(av.arduino_data_buffer[0])
-                        else:
-                            print("Checksum didn't match :/")
-                            av.ser.write(av.arduino_data_buffer[0])
-                    else:
-                        av.serial_count = 0
-                        av.ser.reset_input_buffer()
-
+                    av.arduino_data_buffer_copy = av.arduino_data_buffer
                     av.arduino_data_buffer.clear()
+                    av.return_val.clear()
+                    av.return_val.append(av.arduino_data_buffer_copy)
                     return
-                else:
-                    av.serial_count += 1
+                    av.data_buffer_mutex.acquire()
+                    try:
+                        print("arduino_serial_manager: acquired mutex")
+                        av.arduino_data_buffer_copy.clear()
+                        av.arduino_data_buffer_copy = av.arduino_data_buffer
+                        print(av.arduino_data_buffer_copy)
+                    finally:
+                        av.data_buffer_mutex.release()
+                        av.arduino_data_buffer.clear()
+                        return
+                #     # check if the ard reset counts bit is set, if so, send signal to ard to reset counts
+                #     if byte_to_int(av.arduino_data_buffer[5]) & ARD_RESET_MASK > 0:
+                #         print("Arduino triggered the watchdog")
+                #         # sfv.ser.write(gc.RESET_COUNTS_FLAG_BYTE)
+                #
+                #     # check if the ard inputs ready bit is set, if so, read in the 6 bytes from the ard
+                #     if byte_to_int(av.arduino_data_buffer[5]) & ARD_REPORT_ERROR_MASK > 0:
+                #         print("Arduino reporting at least 1 error")
+                #
+                #     if is_input_valid(av.arduino_data_buffer):
+                #         av.inputs_from_ard = byte_arr_to_int(av.arduino_data_buffer)
+                #
+                #         if av.arduino_data_buffer[0] == av.inputs_from_ard % 128:
+                #             print("Checksum matched!")
+                #             av.ser.write(av.arduino_data_buffer[0])
+                #         else:
+                #             print("Checksum didn't match :/")
+                #             av.ser.write(av.arduino_data_buffer[0])
+                #     else:
+                #         av.serial_count = 0
+                #         av.ser.reset_input_buffer()
+                #
+                #     av.arduino_data_buffer.clear()
+                #     return
+                # else:
+                #     av.serial_count += 1
             # # this just prints the read byte array to console
             # debug.Debugger.print_byte_arr(gc.serial_in_buffer)
             # walk through the buffer and verify
