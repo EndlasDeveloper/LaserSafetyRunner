@@ -4,6 +4,7 @@ from const_img_paths import *
 from constant_display import *
 import app_vars as av
 import pygame
+from time import sleep
 
 
 class Display:
@@ -53,6 +54,7 @@ class Display:
 
             self._update_pygame_image()
         # release the data buffer mutex
+
 
     #######################################################################################
     # Name: _get_display_image_path
@@ -107,24 +109,30 @@ class Display:
     #######################################################################
     def _update_pygame_image(self):
         self.img_path = self._get_display_image_path()
-        print("img path: " + self.img_path)
-        # change stuff only if stuff changed
-        if av.last_py_img_path != self.img_path:
-            av.py_img_last = self.img_path
-            # load image with pygame
-            # scale image to 95% of screen wid and hit
-            av.py_img = pygame.image.load(self.img_path)
-            av.py_img = pygame.transform.scale(av.py_img, (int(0.95 * DISPLAY_WIDTH), int(0.95 * DISPLAY_HEIGHT)))
-            # get reference to the image rectangle
-            rect = av.py_img.get_rect()
-            # recenter rectangle so there is an even amount of border on each side
-            rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
-            # background color
-            av.main_canvas.fill(BLACK)
-            # draw image
-            av.main_canvas.blit(av.py_img, rect)
-            # render changes
-            pygame.display.update()
+        # display waiting message if com port connection failure
+        if not av.is_com_port_open and not av.has_port_connected_before:
+            self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
+        elif not av.is_com_port_open and av.has_port_connected_before:
+            self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
+        else:
+            print("img path: " + self.img_path)
+            # change stuff only if stuff changed
+            if av.last_py_img_path != self.img_path:
+                av.py_img_last = self.img_path
+                # load image with pygame
+                # scale image to 95% of screen wid and hit
+                av.py_img = pygame.image.load(self.img_path)
+                av.py_img = pygame.transform.scale(av.py_img, (int(0.95 * DISPLAY_WIDTH), int(0.95 * DISPLAY_HEIGHT)))
+                # get reference to the image rectangle
+                rect = av.py_img.get_rect()
+                # recenter rectangle so there is an even amount of border on each side
+                rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
+                # background color
+                av.main_canvas.fill(BLACK)
+                # draw image
+                av.main_canvas.blit(av.py_img, rect)
+                # render changes
+                pygame.display.update()
 
     @staticmethod
     def _setup_pygame_events():
@@ -136,5 +144,9 @@ class Display:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     pygame.quit()
                     exit(0)
+
+    async def update_display(self, event):
+        await event.wait()
+        self._update_pygame_image()
 
 

@@ -2,7 +2,7 @@ from serial import Serial, SerialException, EIGHTBITS
 from constant_serial import *
 from serial_util import *
 from constant_mask import *
-from time import sleep
+from time import sleep, perf_counter
 
 
 class ArduinoSerialManager:
@@ -40,7 +40,6 @@ class ArduinoSerialManager:
                                     timeout=SERIAL_TIMEOUT)
             print(av.com_port)
 
-            response = None
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
             sleep(1)
@@ -78,10 +77,11 @@ class ArduinoSerialManager:
             # try to connect to each, see if a response from the arduino returns
             if self.open_port_and_flag_result():
                 return True
+        self.invalidate_open_port_flags()
         return False
 
     ####################################################################
-    # Name: read_input_bytes
+    # Name: start_reading_from_serial
     # Description: tries to read in 5 bytes over the open serial
     #              port. If it fails, a handler is called where
     #              values and flags are set to try and re-open
@@ -91,7 +91,9 @@ class ArduinoSerialManager:
     def start_reading_from_serial(self):
         av.ser.write(RESET_COUNTS)
         av.ser.write(CONTACT_TO_ARD)
+
         while av.ser.in_waiting > 0:
+            # signal arduino
             try:
                 av.arduino_data_buffer.append(av.ser.read())
                 if len(av.arduino_data_buffer) == 6 and av.arduino_data_buffer[5] == b'':
@@ -107,16 +109,6 @@ class ArduinoSerialManager:
                     av.return_val.clear()
                     av.return_val.append(av.arduino_data_buffer_copy)
                     return
-                    av.data_buffer_mutex.acquire()
-                    try:
-                        print("arduino_serial_manager: acquired mutex")
-                        av.arduino_data_buffer_copy.clear()
-                        av.arduino_data_buffer_copy = av.arduino_data_buffer
-                        print(av.arduino_data_buffer_copy)
-                    finally:
-                        av.data_buffer_mutex.release()
-                        av.arduino_data_buffer.clear()
-                        return
                 #     # check if the ard reset counts bit is set, if so, send signal to ard to reset counts
                 #     if byte_to_int(av.arduino_data_buffer[5]) & ARD_RESET_MASK > 0:
                 #         print("Arduino triggered the watchdog")
@@ -145,8 +137,7 @@ class ArduinoSerialManager:
                 #     av.serial_count += 1
             # # this just prints the read byte array to console
             # debug.Debugger.print_byte_arr(gc.serial_in_buffer)
-            # walk through the buffer and verify
+
             except SerialException:  # read failed
                 # set proper flags to indicate port needs to be re-opened
                 self.invalidate_open_port_flags()
-

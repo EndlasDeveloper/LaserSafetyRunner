@@ -1,8 +1,8 @@
 from serial import Serial
-from threading import Lock
 from platform import system
 from pygame import display, FULLSCREEN
 from constant_display import DISPLAY_WIDTH, DISPLAY_HEIGHT
+from asyncio import *
 
 this_platform = system()
 arduino_data_buffer = []
@@ -12,7 +12,8 @@ laser_safety_runner = None
 com_port = ""
 return_val = []
 
-has_port_connected_before = None
+
+has_port_connected_before = False
 is_com_port_open = False
 found_platform = False
 reset_serial_connection = False

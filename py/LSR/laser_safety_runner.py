@@ -3,11 +3,12 @@ from threading import Thread
 from multiprocessing import Process
 from arduino_serial_manager import ArduinoSerialManager
 import app_vars as av
+import asyncio
 from constant_serial import *
 from constant_display import WAITING_FOR_INPUT_DEVICE_MSG
 from serial_util import is_port_set
 from constant_display import BASE_UI_REFRESH_RATE
-from time import perf_counter, sleep
+from time import perf_counter
 from display import Display
 
 
@@ -34,7 +35,7 @@ class LaserSafetyRunner:
                 print("no ard response...")
 
     def __init__(self):
-        # self.display = Display()
+        self.display = Display()
         self.ard_listener = ArduinoSerialManager()
 
         # initialize the ui and arduino threads
@@ -48,9 +49,7 @@ class LaserSafetyRunner:
         while True:
             if not av.ser.is_open:
                 self.init_serial_to_arduino()
-
             try:
-
                 # self.display.update_display()
                 if arduino_process is None or arduino_process.is_alive():
                     arduino_process = Thread(name="Arduino Process",
@@ -67,3 +66,4 @@ class LaserSafetyRunner:
                 from traceback import print_exc
                 print_exc()
                 return False
+
