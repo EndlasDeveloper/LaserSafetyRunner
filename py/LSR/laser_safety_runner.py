@@ -35,7 +35,7 @@ class LaserSafetyRunner:
                 print("no ard response...")
 
     def __init__(self):
-        self.display = Display()
+       # self.display = Display()
         self.ard_listener = ArduinoSerialManager()
 
         # initialize the ui and arduino threads
