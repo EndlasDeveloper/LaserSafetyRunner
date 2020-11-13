@@ -37,8 +37,8 @@ class Display:
         except pygame.error():
             return
 
-    def update_display(self, byte_arr):
-        self.state = byte_arr_to_int(byte_arr)
+    def update_display(self, state):
+        self.state = state
         print("Display state: "+str(self.state))
         # display waiting message if com port connection failure
         print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " + str(av.has_port_connected_before))
@@ -104,6 +104,7 @@ class Display:
     #######################################################################
     def update_pygame_image(self):
         self.img_path = self._get_display_image_path()
+        print(self.img_path)
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
@@ -139,9 +140,5 @@ class Display:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     pygame.quit()
                     exit(0)
-
-    async def update_display(self, event):
-        await event.wait()
-        self.update_pygame_image()
 
 

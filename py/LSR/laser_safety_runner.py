@@ -7,9 +7,9 @@ import asyncio
 import os
 from constant_serial import *
 from constant_display import WAITING_FOR_INPUT_DEVICE_MSG
-from serial_util import is_port_set
+from serial_util import is_port_set, byte_arr_to_int
 from constant_display import BASE_UI_REFRESH_RATE
-from time import perf_counter
+from time import perf_counter, sleep
 from display import Display
 
 
@@ -45,7 +45,7 @@ class LaserSafetyRunner:
         # initialize the base time reference
         # init arduino listener and UI objects
 
-    def run(self):
+    async def run(self):
         arduino_process = None
         while True:
             if not av.ser.is_open:
@@ -53,7 +53,7 @@ class LaserSafetyRunner:
             try:
                 # self.display.update_display()
                 if arduino_process is None or arduino_process.is_alive():
-                    arduino_process = Process(name="Arduino Process",
+                    arduino_process = Thread(name="Arduino Process",
                                               target=self.ard_listener.start_reading_from_serial(),
                                               args=(av.return_val,), daemon=True)
 
@@ -61,12 +61,17 @@ class LaserSafetyRunner:
                 # check to see if serial connection reset flag is set
                 else:
                     result = []
-                    print("len result val: " + str(len(av.return_val)))
+                    arduino_process.join()
                     if len(av.return_val) > 0:
                         result = av.return_val[len(av.return_val)-1]
-                    # self.display.update_display(result)
-                    print("return val: "+str(result))
-                    arduino_process.join()
+                    if not len(result) == 0:
+                        result = byte_arr_to_int(result)
+                        print("return val: " + str(bin(result)))
+                        try:
+                            await self.display.update_display(result)
+                        except TypeError:
+                            print("typeError")
+
                     arduino_process = None
             except BaseException:
                 from traceback import print_exc

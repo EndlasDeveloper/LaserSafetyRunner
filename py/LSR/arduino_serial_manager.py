@@ -41,7 +41,7 @@ class ArduinoSerialManager:
 
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
-            sleep(1)
+            sleep(.5)
             response = av.ser.read()
             print("response: " + str(response))
 
@@ -95,7 +95,6 @@ class ArduinoSerialManager:
                 if len(av.arduino_data_buffer) == 6 and av.arduino_data_buffer[5] == b'':
                     if not is_input_valid(av.arduino_data_buffer()):
                         av.arduino_data_buffer.clear()
-                        av.return_val.append(av.arduino_data_buffer_copy)
                         return
                 # if header bits are set in data bytes or the serial count exceeds the buffer size
                 if len(av.arduino_data_buffer) > 5:
