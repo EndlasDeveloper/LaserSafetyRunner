@@ -4,6 +4,7 @@ from const_img_paths import *
 from constant_display import *
 import app_vars as av
 import pygame
+from serial_util import *
 from time import sleep
 
 
@@ -36,7 +37,9 @@ class Display:
         except pygame.error():
             return
 
-    def update_display(self):
+    def update_display(self, byte_arr):
+        self.state = byte_arr_to_int(byte_arr)
+        print("Display state: "+str(self.state))
         # display waiting message if com port connection failure
         print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " + str(av.has_port_connected_before))
         if not av.is_com_port_open and not av.has_port_connected_before:
@@ -44,17 +47,9 @@ class Display:
         elif not av.is_com_port_open and av.has_port_connected_before and av.found_platform:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
         else:
-            print("\ncom port open\n")
-            av.data_buffer_mutex.acquire(blocking=True, timeout=MUTEX_ACQUIRE_TIMEOUT_ARDUINO)
-            try:
-                print("display: acquired mutex")
-                self.buffer = av.arduino_data_buffer_copy
-            finally:
-                av.data_buffer_mutex.release()
 
-            self._update_pygame_image()
+            self.update_pygame_image()
         # release the data buffer mutex
-
 
     #######################################################################################
     # Name: _get_display_image_path
@@ -107,7 +102,7 @@ class Display:
     # Description: helper method to update the image, scale it, center,
     #              and render the changes
     #######################################################################
-    def _update_pygame_image(self):
+    def update_pygame_image(self):
         self.img_path = self._get_display_image_path()
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
@@ -147,6 +142,6 @@ class Display:
 
     async def update_display(self, event):
         await event.wait()
-        self._update_pygame_image()
+        self.update_pygame_image()
 
 
