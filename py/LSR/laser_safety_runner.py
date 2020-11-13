@@ -45,7 +45,6 @@ class LaserSafetyRunner:
 
     def run(self):
         arduino_process = None
-        last_ret = []
         while True:
             if not av.ser.is_open:
                 self.init_serial_to_arduino()
@@ -60,7 +59,12 @@ class LaserSafetyRunner:
                 # check to see if serial connection reset flag is set
                 else:
                     arduino_process.join()
-                    print("thread returned: "+str(av.return_val))
+                    result = []
+                    print("len result val: " + str(len(av.return_val)))
+                    if len(av.return_val) > 0:
+                        result = av.return_val[len(av.return_val)-1]
+
+                    print("return val: "+str(result))
                     arduino_process = None
             except BaseException:
                 from traceback import print_exc

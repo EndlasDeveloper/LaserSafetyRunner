@@ -1,8 +1,7 @@
 from serial import Serial, SerialException, EIGHTBITS
 from constant_serial import *
 from serial_util import *
-from constant_mask import *
-from time import sleep, perf_counter
+from time import sleep
 
 
 class ArduinoSerialManager:
@@ -46,10 +45,8 @@ class ArduinoSerialManager:
             response = av.ser.read()
             print("response: " + str(response))
 
-            # cast response into an int
-
             # verify response
-            if response == b'p':
+            if not response == b'':
                 # write back a magic byte
                 self.set_open_port_flags()
                 return True
@@ -87,7 +84,6 @@ class ArduinoSerialManager:
     #              values and flags are set to try and re-open
     #              the port
     ####################################################################
-
     def start_reading_from_serial(self):
         av.ser.write(RESET_COUNTS)
         av.ser.write(CONTACT_TO_ARD)
@@ -99,14 +95,14 @@ class ArduinoSerialManager:
                 if len(av.arduino_data_buffer) == 6 and av.arduino_data_buffer[5] == b'':
                     if not is_input_valid(av.arduino_data_buffer()):
                         av.arduino_data_buffer.clear()
-                        av.return_val.clear()
                         av.return_val.append(av.arduino_data_buffer_copy)
                         return
                 # if header bits are set in data bytes or the serial count exceeds the buffer size
                 if len(av.arduino_data_buffer) > 5:
                     av.arduino_data_buffer_copy = av.arduino_data_buffer
                     av.arduino_data_buffer.clear()
-                    av.return_val.clear()
+                    if len(av.return_val) >= 5:
+                        av.return_val.clear()
                     av.return_val.append(av.arduino_data_buffer_copy)
                     return
                 #     # check if the ard reset counts bit is set, if so, send signal to ard to reset counts
@@ -135,9 +131,6 @@ class ArduinoSerialManager:
                 #     return
                 # else:
                 #     av.serial_count += 1
-            # # this just prints the read byte array to console
-            # debug.Debugger.print_byte_arr(gc.serial_in_buffer)
-
             except SerialException:  # read failed
                 # set proper flags to indicate port needs to be re-opened
                 self.invalidate_open_port_flags()
