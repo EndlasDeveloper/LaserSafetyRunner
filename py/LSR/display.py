@@ -1,22 +1,36 @@
-from constant_serial import *
 from constant_mask import *
 from const_img_paths import *
 from constant_display import *
-import app_vars as av
 import pygame
 from serial_util import *
-from time import sleep
 
 
+###############################################################
+# Class: Display
+# Description: Display object that handles updating the
+#              display monitor thread
+###############################################################
 class Display:
+    ####################################################################
+    # Name: constructor
+    # Description: initializes a buffer to hold a copy of result_var,
+    #              the state (the half bytes converted into an int).
+    #              image path and a flag for setting up pygame events.
+    ####################################################################
     def __init__(self):
         self.buffer = []
         self.state = 0
         self.img_path = ""
-        self._setup_pygame_events()
+        self.is_setup = False
 
-    @staticmethod
-    def display_system_waiting(msg, is_init_screen):
+    ####################################################################
+    # Name: display_system_waiting
+    # Description: handles setting up the waiting screen and rendering
+    ####################################################################
+    def display_system_waiting(self, msg, is_init_screen):
+        if not self.is_setup:
+            self._setup_pygame_events()
+            self.is_setup = True
         try:
             # if screen is initialized, background sky blue
             if is_init_screen:
@@ -37,6 +51,12 @@ class Display:
         except pygame.error():
             return
 
+    ###############################################################################
+    # Name: update_display
+    # Description: looks if the ports are still open. If not, waiting msg is
+    #              rendered. Otherwise, the new state is hashed, and the image
+    #              updated based on the hashed flags
+    ###############################################################################
     def update_display(self, state):
         self.state = state
         print("Display state: "+str(self.state))
@@ -47,9 +67,7 @@ class Display:
         elif not av.is_com_port_open and av.has_port_connected_before and av.found_platform:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
         else:
-
             self.update_pygame_image()
-        # release the data buffer mutex
 
     #######################################################################################
     # Name: _get_display_image_path
@@ -104,6 +122,7 @@ class Display:
     #######################################################################
     def update_pygame_image(self):
         self.img_path = self._get_display_image_path()
+
         print(self.img_path)
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
@@ -130,15 +149,22 @@ class Display:
                 # render changes
                 pygame.display.update()
 
+    ###################################################################
+    # Name: _setup_pygame_events
+    # Description: sets up a few event handlers for pygame. Right now,
+    #              the program crashes when buttons are clicked. This
+    #              is suspected to stem from the inherent complexity
+    #              using async methods
+    ###################################################################
     @staticmethod
-    def _setup_pygame_events():
+    async def _setup_pygame_events():
         # get all events
-        for event in pygame.event.get():
+        for event in await pygame.event.get():
             # when a key is pressed
             if event.type == pygame.KEYDOWN:
                 # if the key is esc or q, the program exits gracefully
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                    pygame.quit()
+                    await pygame.quit()
                     exit(0)
 
 

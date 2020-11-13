@@ -4,7 +4,12 @@ from serial_util import *
 from time import sleep
 
 
-class ArduinoSerialManager:
+####################################################################
+# Class: ArduinoListener
+# Description: Listener object for the serial port connected to the
+#              input Arduino.
+####################################################################
+class ArduinoListener:
 
     #########################################################
     # Name: set_open_port_flags
@@ -32,7 +37,7 @@ class ArduinoSerialManager:
     #              and if the reply is what is expected, the port is considered
     #              open.
     #############################################################################
-    def open_port_and_flag_result(self):
+    async def open_port_and_flag_result(self):
         try:
             # open USB port
             av.ser = Serial(port=av.com_port, baudrate=BAUD_RATE, bytesize=EIGHTBITS,
@@ -41,7 +46,7 @@ class ArduinoSerialManager:
 
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
-            sleep(.5)
+            sleep(1)
             response = av.ser.read()
             print("response: " + str(response))
 
@@ -61,7 +66,7 @@ class ArduinoSerialManager:
     # Name: determine_platform
     # Description: method that sets COM_PORT to system dependent syntax
     ####################################################################
-    def determine_platform_and_connect(self):
+    async def determine_platform_and_connect(self):
         com_port_prefix = ""
         if av.this_platform == WIN:
             com_port_prefix = WIN_COM_PORT_PREFIX
@@ -72,7 +77,8 @@ class ArduinoSerialManager:
         for com_num in range(9):
             av.com_port = com_port_prefix + str(com_num)
             # try to connect to each, see if a response from the arduino returns
-            if self.open_port_and_flag_result():
+            is_open = await self.open_port_and_flag_result()
+            if is_open:
                 return True
         self.invalidate_open_port_flags()
         return False
@@ -85,23 +91,29 @@ class ArduinoSerialManager:
     #              the port
     ####################################################################
     def start_reading_from_serial(self):
+        # signal arduino
         av.ser.write(RESET_COUNTS)
         av.ser.write(CONTACT_TO_ARD)
-
+        # read if there is anything in the input buffer
         while av.ser.in_waiting > 0:
-            # signal arduino
             try:
+                # append next byte to data buffer
                 av.arduino_data_buffer.append(av.ser.read())
+                # if there is 6 bytes and the last one is empty, just clear and return
                 if len(av.arduino_data_buffer) == 6 and av.arduino_data_buffer[5] == b'':
                     if not is_input_valid(av.arduino_data_buffer()):
                         av.arduino_data_buffer.clear()
                         return
                 # if header bits are set in data bytes or the serial count exceeds the buffer size
                 if len(av.arduino_data_buffer) > 5:
+                    # copy data buffer
                     av.arduino_data_buffer_copy = av.arduino_data_buffer
+                    # clear data buffer
                     av.arduino_data_buffer.clear()
+                    # if return_val has 5 elements, clear -- this is arbitrary
                     if len(av.return_val) >= 5:
                         av.return_val.clear()
+                    # append a copy of the data buffer to return_val and return
                     av.return_val.append(av.arduino_data_buffer_copy)
                     return
                 #     # check if the ard reset counts bit is set, if so, send signal to ard to reset counts

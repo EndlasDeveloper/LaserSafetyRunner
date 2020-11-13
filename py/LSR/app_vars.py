@@ -3,7 +3,6 @@ from platform import system
 from pygame import display, FULLSCREEN
 from constant_display import DISPLAY_WIDTH, DISPLAY_HEIGHT
 from asyncio import *
-from queue import SimpleQueue
 
 this_platform = system()
 arduino_data_buffer = []
