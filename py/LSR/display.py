@@ -58,6 +58,10 @@ class Display:
     #              updated based on the hashed flags
     ###############################################################################
     def update_display(self, state):
+        print("close app: " + str(av.close_app))
+        if av.close_app:
+            pygame.quit()
+            exit(0)
         self.state = state
         print("Display state: " + str(self.state))
         # display waiting message if com port connection failure
@@ -165,5 +169,4 @@ class Display:
         for event in events:
             # click mouse or press button to try and quit application
             if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-                pygame.quit()
-                # exit(0)
+                av.close_app = True

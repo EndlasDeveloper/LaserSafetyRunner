@@ -25,3 +25,5 @@ main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
 py_img_last = ""
 py_img = None
 last_py_img_path = ""
+
+close_app = False

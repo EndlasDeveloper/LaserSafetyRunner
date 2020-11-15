@@ -102,3 +102,4 @@ class LaserSafetyRunner:
                 print_exc()
                 return False
 
+
