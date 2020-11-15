@@ -21,16 +21,16 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
-        self.is_setup = False
+
+    def initialize_display_events(self):
+        self._setup_pygame_events()
 
     ####################################################################
     # Name: display_system_waiting
     # Description: handles setting up the waiting screen and rendering
     ####################################################################
-    def display_system_waiting(self, msg, is_init_screen):
-        if not self.is_setup:
-            self._setup_pygame_events()
-            self.is_setup = True
+    @staticmethod
+    def display_system_waiting(msg, is_init_screen):
         try:
             # if screen is initialized, background sky blue
             if is_init_screen:
@@ -71,10 +71,10 @@ class Display:
 
     #######################################################################################
     # Name: _get_display_image_path
-    # Description: takes an integer as a parameter. Method returns the appropriate image
+    # Description: Uses state to decide image path. Method returns the appropriate image
     #              path as a string.
     #######################################################################################
-    def _get_display_image_path(self):
+    def get_display_image_path(self):
         states = self._hash_state()
         if states[LASER_FIRE_MASK]:
             return LASER_FIRE_IMG
@@ -121,7 +121,7 @@ class Display:
     #              and render the changes
     #######################################################################
     def update_pygame_image(self):
-        self.img_path = self._get_display_image_path()
+        self.img_path = self.get_display_image_path()
 
         print(self.img_path)
         # display waiting message if com port connection failure
@@ -157,14 +157,15 @@ class Display:
     #              using async methods
     ###################################################################
     @staticmethod
-    async def _setup_pygame_events():
+    def _setup_pygame_events():
+        print("inside setup pygame events.")
         # get all events
-        for event in await pygame.event.get():
-            # when a key is pressed
-            if event.type == pygame.KEYDOWN:
-                # if the key is esc or q, the program exits gracefully
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                    await pygame.quit()
-                    exit(0)
+        events = pygame.event.get()
+        for event in events:
+            # click mouse or press button to try and quit application
+            if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
+                pygame.quit()
+                exit(0)
+
 
 

@@ -1,5 +1,5 @@
 # imports
-from arduino_serial_manager import ArduinoListener
+from arduino_listener import ArduinoListener
 import app_vars as av
 from constant_display import WAITING_FOR_INPUT_DEVICE_MSG
 from serial_util import is_port_set, byte_arr_to_int
@@ -64,6 +64,8 @@ class LaserSafetyRunner:
     #              fashion to speed up the UI.
     #########################################################################
     async def run(self):
+        # initialize pygame events synchronously
+        self.display.initialize_display_events()
         # loop forever
         while True:
             # make sure the com port has been successfully opened
