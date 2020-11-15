@@ -59,9 +59,10 @@ class Display:
     ###############################################################################
     def update_display(self, state):
         self.state = state
-        print("Display state: "+str(self.state))
+        print("Display state: " + str(self.state))
         # display waiting message if com port connection failure
-        print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " + str(av.has_port_connected_before))
+        print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " +
+              str(av.has_port_connected_before))
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
         elif not av.is_com_port_open and av.has_port_connected_before and av.found_platform:
@@ -165,7 +166,4 @@ class Display:
             # click mouse or press button to try and quit application
             if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
                 pygame.quit()
-                exit(0)
-
-
-
+                # exit(0)

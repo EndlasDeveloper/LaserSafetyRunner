@@ -30,6 +30,3 @@ READ_BYTE_SIZE = 6
 # LITTLE OR BIG ENDIAN
 ENDIAN = "big"
 
-
-
-
