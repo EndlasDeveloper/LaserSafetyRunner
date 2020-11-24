@@ -52,5 +52,9 @@ def is_input_valid(input_byte_arr):
     if byte_to_int(bytes(input_byte_arr[5])) < 128:
         print("is_input_valid: magic byte wasn't set properly")
         return False
-    print("magic byte was set properly")
+
+    input_int = byte_arr_to_int(input_byte_arr)
+    if input_int % 128 != byte_to_int(input_byte_arr[0]):
+        return False
+
     return True
