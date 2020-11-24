@@ -41,6 +41,7 @@ def is_port_set():
 #              input is a valid input or not as a bool
 #######################################################################################
 def is_input_valid(input_byte_arr):
+    print(byte_arr_to_int(input_byte_arr))
     # make sure data bytes don't have header bits set, and vice-versa for the magic byte
     if byte_to_int(bytes(input_byte_arr[1])) > 15 or byte_to_int(bytes(input_byte_arr[2])) > 15 or \
             byte_to_int(bytes(input_byte_arr[3])) > 15 or byte_to_int(bytes(input_byte_arr[4])) > 15:
