@@ -169,4 +169,5 @@ class Display:
         for event in events:
             # click mouse or press button to try and quit application
             if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-                av.close_app = True
+                pygame.quit()
+                exit(1)
