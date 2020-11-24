@@ -44,14 +44,17 @@ class ArduinoListener:
                                     timeout=SERIAL_TIMEOUT)
             print(av.com_port)
 
+            av.ser.flushInput()
+
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
-            sleep(1)
+
+            # should get a 6 byte response packet here
             response = av.ser.read()
             print("response: " + str(response))
 
             # verify response
-            if not response == b'':
+            if response == b'x/93':
                 # write back a magic byte
                 self.set_open_port_flags()
                 return True
