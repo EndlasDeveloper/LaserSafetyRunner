@@ -77,8 +77,8 @@ class ArduinoListener:
     ####################################################################
     async def read_from_serial(self):
         # read if there is anything in the input buffer
-        while av.ser.in_waiting > 0:
-            try:
+        try:
+            while av.ser.in_waiting > 0:
                 print("inside serial read")
                 # append next byte to data buffer
                 in_byte = av.ser.read()
@@ -95,7 +95,7 @@ class ArduinoListener:
                         av.ser.write(0)
                     return
 
-            except SerialException:  # read failed
+        except SerialException:  # read failed
                 # set proper flags to indicate port needs to be re-opened
                 self.invalidate_open_port_flags()
 
