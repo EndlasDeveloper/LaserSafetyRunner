@@ -44,10 +44,11 @@ class ArduinoListener:
                                     timeout=SERIAL_TIMEOUT)
             print(av.com_port)
 
-            av.ser.flushInput()
+            #av.ser.flushInput()
 
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
+            sleep(1)
 
             # should get a 6 byte response packet here
             response = av.ser.read()
