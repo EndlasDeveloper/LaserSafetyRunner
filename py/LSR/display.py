@@ -22,8 +22,6 @@ class Display:
         self.state = 0
         self.img_path = ""
 
-    def initialize_display_events(self):
-        self._setup_pygame_events()
 
     ####################################################################
     # Name: display_system_waiting
@@ -58,10 +56,6 @@ class Display:
     #              updated based on the hashed flags
     ###############################################################################
     def update_display(self, state):
-        print("close app: " + str(av.close_app))
-        if av.close_app:
-            pygame.quit()
-            exit(0)
         self.state = state
         print("Display state: " + str(self.state))
         # display waiting message if com port connection failure

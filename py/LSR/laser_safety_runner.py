@@ -17,28 +17,24 @@ class LaserSafetyRunner:
     # Description: initializes the serial connection between the RPi and
     #              Arduino
     ########################################################################
-    async def init_serial_to_arduino(self):
+    def init_serial_to_arduino(self):
         # keep searching for com port till one gives arduino response
         flag = False
         while not flag:
-            try:
-                flag = await self.ard_listener.determine_platform_and_connect()
-            except TypeError:
-                print("TypeError: await self.ard_listener.determine_platform_and_connect()")
             # if successful connect, set flags and display
-            if flag:
+            if self.ard_listener.determine_platform_and_connect():
                 av.is_com_port_open = True
                 if av.has_port_connected_before is None:
                     av.has_port_connected_before = False
                 else:
                     av.has_port_connected_before = True
                 av.found_platform = True
-                try:
-                    await self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
-                except TypeError:
-                    print("TypeError: await self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)")
-                print("\nis port set:" + str(is_port_set()))
-                print("Connected successfully to com port: " + av.com_port)
+                # try:
+                #     self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
+                # except TypeError:
+                #     print("TypeError: await self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)")
+                # print("\nis port set:" + str(is_port_set()))
+                # print("Connected successfully to com port: " + av.com_port)
             else:
                 print("no ard response...")
 
@@ -64,18 +60,18 @@ class LaserSafetyRunner:
     #              fashion to speed up the UI.
     #########################################################################
     async def run(self):
+
         # initialize pygame events synchronously
         # self.display.initialize_display_events()
         # loop forever
         while True:
             # make sure the com port has been successfully opened
-            if not av.ser.is_open:
-                await self.init_serial_to_arduino()
-            # general catch exception block
+            # if not av.ser.is_open:
+            #     print(av.ser.is_open)
+            #     self.init_serial_to_arduino()
             try:
-                # async call to read serial input
                 try:
-                    await self.ard_listener.start_reading_from_serial()
+                    await self.ard_listener.read_from_serial()
                 # sometimes throws this, if ignored, the system seems
                 # to go on without problems
                 except TypeError:
@@ -88,8 +84,6 @@ class LaserSafetyRunner:
                     result = av.return_val[len(av.return_val)-1]
                 # make sure not empty array
                 if not len(result) == 0:
-                    result = byte_arr_to_int(result)
-                    print("return val: " + str(bin(result)))
                     try:
                         print("here")
                         # async call to update the display canvas with the new input
