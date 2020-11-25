@@ -1,7 +1,7 @@
 from constant_mask import *
 from const_img_paths import *
 from constant_display import *
-import pygame
+from pygame import *
 from serial_util import *
 
 
@@ -21,18 +21,18 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
-
+        self.main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
+        self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
     # Name: display_system_waiting
     # Description: handles setting up the waiting screen and rendering
     ####################################################################
-    @staticmethod
-    def display_system_waiting(msg, is_init_screen):
+    def display_system_waiting(self, msg, is_init_screen):
         try:
             # if screen is initialized, background sky blue
             if is_init_screen:
-                av.main_canvas.fill(SKY_BLUE)
+                self.main_canvas.fill(SKY_BLUE)
             # initialize pygame
             pygame.init()
             # set window title message
@@ -44,9 +44,9 @@ class Display:
             # center the waiting msg
             text_rect = text.get_rect(center=(int(DISPLAY_WIDTH / 2), int(DISPLAY_HEIGHT / 2)))
             # update canvas and render the waiting for reply msg
-            av.main_canvas.blit(text, text_rect)
+            self.main_canvas.blit(text, text_rect)
             pygame.display.update()
-        except pygame.error():
+        except BaseException:
             return
 
     ###############################################################################
@@ -74,7 +74,7 @@ class Display:
     #              path as a string.
     #######################################################################################
     def get_display_image_path(self):
-        states = self._hash_state()
+        states = self.hash_state()
         if states[LASER_FIRE_MASK]:
             return LASER_FIRE_IMG
         elif states[THRESHOLD_MASK]:
@@ -105,7 +105,7 @@ class Display:
     # Description: maps the state mask to a bool indicating whether the bit for that mask
     #              was set and returns the dict
     ######################################################################################
-    def _hash_state(self):
+    def hash_state(self):
         return {LASER_FIRE_MASK: (self.state & LASER_FIRE_MASK) > 0,
                 THRESHOLD_MASK: (self.state & THRESHOLD_MASK) > 0, SHUTTER_MASK: (self.state & SHUTTER_MASK) > 0,
                 PROGRAM_MASK: (self.state & PROGRAM_MASK) > 0, ESTOP_MASK: (self.state & ESTOP_MASK) > 0,
@@ -121,14 +121,13 @@ class Display:
     #######################################################################
     def update_pygame_image(self):
         self.img_path = self.get_display_image_path()
-
-        print(self.img_path)
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
         elif not av.is_com_port_open and av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
         else:
+            print("av last py img path: " + av.last_py_img_path)
             print("img path: " + self.img_path)
             # change stuff only if stuff changed
             if av.last_py_img_path != self.img_path:
@@ -142,9 +141,9 @@ class Display:
                 # recenter rectangle so there is an even amount of border on each side
                 rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
                 # background color
-                av.main_canvas.fill(BLACK)
+                self.main_canvas.fill(BLACK)
                 # draw image
-                av.main_canvas.blit(av.py_img, rect)
+                self.main_canvas.blit(av.py_img, rect)
                 # render changes
                 pygame.display.update()
 
@@ -160,8 +159,8 @@ class Display:
         print("inside setup pygame events.")
         # get all events
         events = pygame.event.get()
-        for event in events:
+        for ev in events:
             # click mouse or press button to try and quit application
-            if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
+            if ev.type == pygame.MOUSEBUTTONDOWN or ev.type == pygame.KEYDOWN:
                 pygame.quit()
                 exit(1)

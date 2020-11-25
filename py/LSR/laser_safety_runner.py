@@ -47,9 +47,9 @@ class LaserSafetyRunner:
     #########################################################################
     def __init__(self):
         # init display obj
-        #self.display = Display()
+        # self.display = Display()
         # init display with waiting msg
-        #self.display.update_pygame_image()
+        # self.display.update_pygame_image()
         # initialize the arduino listener
         self.ard_listener = ArduinoListener()
 
@@ -63,7 +63,6 @@ class LaserSafetyRunner:
     async def run(self):
 
         # initialize pygame events synchronously
-        # self.display.initialize_display_events()
         # loop forever
         while True:
             # make sure the com port has been successfully opened
@@ -88,7 +87,7 @@ class LaserSafetyRunner:
                         print(result)
                         
                         # async call to update the display canvas with the new input
-                        #await self.display.update_display(result)
+                        # await self.display.update_display(result)
                     # don't care, keep going
                     except TypeError:
                         print("typeError")

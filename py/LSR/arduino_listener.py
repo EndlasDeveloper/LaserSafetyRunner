@@ -91,7 +91,7 @@ class ArduinoListener:
                         result = byte_arr_to_int(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)])
                         result_arr = []
                         result_arr.append(result)
-                        av.return_val.append(result)
+                        av.return_val.append(result_arr)
                         av.ser.write(0)
                     return
 
