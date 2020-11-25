@@ -32,9 +32,6 @@ class ArduinoListener:
             av.ser.write(CONTACT_TO_ARD)
             #sleep(1)
 
-            av.ser.write(RESET_COUNTS)
-            av.ser.write(CONTACT_TO_ARD)
-
             response = av.ser.read()
 
             # verify response
@@ -82,6 +79,7 @@ class ArduinoListener:
         # read if there is anything in the input buffer
         while av.ser.in_waiting > 0:
             try:
+                print("inside serial read")
                 # append next byte to data buffer
                 in_byte = av.ser.read()
                 in_int = byte_to_int(in_byte)
@@ -89,10 +87,12 @@ class ArduinoListener:
                 # if there is 6 bytes and the last one is empty, just clear and return
                 # if header bits are set in data bytes or the serial count exceeds the buffer size
                 if len(av.arduino_data_buffer) > 5 and in_int > 127:
-
                     if is_input_valid(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)]):
                         result = byte_arr_to_int(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)])
+                        result_arr = []
+                        result_arr.append(result)
                         av.return_val.append(result)
+                        av.ser.write(0)
                     return
 
             except SerialException:  # read failed

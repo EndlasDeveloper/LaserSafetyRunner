@@ -19,16 +19,17 @@ class LaserSafetyRunner:
     ########################################################################
     def init_serial_to_arduino(self):
         # keep searching for com port till one gives arduino response
-        flag = False
-        while not flag:
+        while not True:
             # if successful connect, set flags and display
             if self.ard_listener.determine_platform_and_connect():
+                print("inside init serial to arduino")
                 av.is_com_port_open = True
                 if av.has_port_connected_before is None:
                     av.has_port_connected_before = False
                 else:
                     av.has_port_connected_before = True
                 av.found_platform = True
+                break
                 # try:
                 #     self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
                 # except TypeError:
@@ -81,11 +82,11 @@ class LaserSafetyRunner:
                 # if there is something return_val
                 if len(av.return_val) > 0:
                     # get the most recent return_val
-                    result = av.return_val[len(av.return_val)-1]
+                    result = av.return_val
                 # make sure not empty array
-                if not len(result) == 0:
                     try:
-                        print("here")
+                        print(result)
+                        
                         # async call to update the display canvas with the new input
                         #await self.display.update_display(result)
                     # don't care, keep going
