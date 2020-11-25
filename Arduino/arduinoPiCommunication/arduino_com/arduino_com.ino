@@ -1,4 +1,4 @@
-#define CONTACT_FROM_PI           170
+#define CONTACT_FROM_PI           147
 #define RESET_COUNTS              153
 
 bool contactFromPi = false;
@@ -43,7 +43,7 @@ void setup() {
 
 void findRPi(){
   while(!contactFromPi){
-    uint8_t writeByte[1] = {1};
+    uint8_t writeByte[1] = {(byte)147};
     byte inByte = Serial.read();
     if (inByte == CONTACT_FROM_PI) {
         contactFromPi = true;
@@ -76,7 +76,6 @@ void checkUSBdata() {
       }
       
       if (inByte == CONTACT_FROM_PI) {
-        Serial.write(byte(1));
         Serial.write(byte(1));
         contactFromPi = true;
         //Serial1.println("CONTACT_FROM_PI");
