@@ -65,10 +65,9 @@ class LaserSafetyRunner:
         # loop forever
         while True:
             # make sure the com port has been successfully opened
-            if not av.ser.is_open:
-            #    print(av.ser.is_open)
-                self.init_serial_to_arduino()
             try:
+                if not av.ser.is_open:
+                    self.init_serial_to_arduino()
                 try:
                     self.ard_listener.read_from_serial()
                 # sometimes throws this, if ignored, the system seems
