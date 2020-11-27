@@ -64,57 +64,33 @@ class LaserSafetyRunner:
 
         # initialize pygame events synchronously
         # loop forever
-        self.init_serial_to_arduino()
         while True:
-            try:
-                if av.ser.in_waiting > 0:
-                    in_byte = av.ser.read()
-                    av.serialBuffer[av.serialCount] = in_byte[0]
-                    # print(ardUSB.in_waiting, serialCount, serialBuffer[serialCount])
-
-                    if (av.serialBuffer[av.serialCount] > 127) and (av.serialCount > 4):
-                        # print(serialBuffer[0:serialCount+1])
-                        inputsFromArd = av.serialBuffer[av.serialCount - 1] << 12 | \
-                                        av.serialBuffer[av.serialCount - 2] << 8 | \
-                                        av.serialBuffer[av.serialCount - 3] << 4 | \
-                                        av.serialBuffer[av.serialCount - 4]
-                        if av.serialBuffer[av.serialCount - 5] == inputsFromArd % 128:
-                            av.ser.write(av.serialBuffer[av.serialCount - 5])
-                            print("                  ", inputsFromArd)
-                        else:
-                            print("CheckSum didnt Match!")
-                        av.serialCount = 0
-                    else:
-                        av.serialCount += 1
-
-
-
             # make sure the com port has been successfully opened
-            # if not av.ser.is_open:
-            # #    print(av.ser.is_open)
-            #     self.init_serial_to_arduino()
-            # try:
-            #     try:
-            #         await self.ard_listener.read_from_serial()
-            #     # sometimes throws this, if ignored, the system seems
-            #     # to go on without problems
-            #     except TypeError:
-            #         print("typeError in ard_listener")
-            #     # init result arr
-            #     result = []
-            #     # if there is something return_val
-            #     if len(av.return_val) > 0:
-            #         # get the most recent return_val
-            #         result = av.return_val
-            #     # make sure not empty array
-            #         try:
-            #             print(result)
-            #
-            #             # async call to update the display canvas with the new input
-            #             # await self.display.update_display(result)
-            #         # don't care, keep going
-            #         except TypeError:
-            #             print("typeError")
+            if not av.ser.is_open:
+            #    print(av.ser.is_open)
+                self.init_serial_to_arduino()
+            try:
+                try:
+                    await self.ard_listener.read_from_serial()
+                # sometimes throws this, if ignored, the system seems
+                # to go on without problems
+                except TypeError:
+                    print("typeError in ard_listener")
+                # init result arr
+                result = []
+                # if there is something return_val
+                if len(av.return_val) > 0:
+                    # get the most recent return_val
+                    result = av.return_val
+                # make sure not empty array
+                    try:
+                        print(result)
+
+                        # async call to update the display canvas with the new input
+                        # await self.display.update_display(result)
+                    # don't care, keep going
+                    except TypeError:
+                        print("typeError")
             # for safety, a base exception is the catch. To find out what the exception was, traceback is used
             except BaseException:
                 from traceback import print_exc
