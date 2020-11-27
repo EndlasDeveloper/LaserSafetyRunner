@@ -118,8 +118,9 @@ class ArduinoListener:
             #             return
 
         except SerialException:  # read failed
-                # set proper flags to indicate port needs to be re-opened
-                self.invalidate_open_port_flags()
+            print("Serial ex")
+            # set proper flags to indicate port needs to be re-opened
+            self.invalidate_open_port_flags()
 
     #########################################################
     # Name: set_open_port_flags
