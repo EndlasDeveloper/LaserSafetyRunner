@@ -71,7 +71,7 @@ class LaserSafetyRunner:
                 self.init_serial_to_arduino()
             try:
                 try:
-                    await self.ard_listener.read_from_serial()
+                    self.ard_listener.read_from_serial()
                 # sometimes throws this, if ignored, the system seems
                 # to go on without problems
                 except TypeError:
@@ -84,7 +84,7 @@ class LaserSafetyRunner:
                     result = av.return_val
                 # make sure not empty array
                     try:
-                        # print(result)
+                        print(result)
                         x = 1
                         # async call to update the display canvas with the new input
                         # await self.display.update_display(result)
