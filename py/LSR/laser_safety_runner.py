@@ -79,7 +79,7 @@ class LaserSafetyRunner:
                 # init result arr
                 result = []
                 # if there is something return_val
-                if len(av.return_val) > 0:
+                if av.return_val > 0:
                     # get the most recent return_val
                     result = av.return_val
                 # make sure not empty array
