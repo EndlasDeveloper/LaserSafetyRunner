@@ -75,7 +75,7 @@ class LaserSafetyRunner:
                 except TypeError:
                     print("typeError in ard_listener")
                 # init result arr
-                result = []
+                result = None
                 # if there is something return_val
                 if av.return_val > 0:
                     # get the most recent return_val
