@@ -76,16 +76,14 @@ class LaserSafetyRunner:
                 except TypeError:
                     print("typeError in ard_listener")
                 # init result arr
-                result = None
                 # if there is something return_val
-                if av.return_val > 0:
+                if av.return_val >= 0:
                     # get the most recent return_val
-                    result = av.return_val
                 # make sure not empty array
                     try:
                         # async call to update the display canvas with the new input
-                        if self.display.state != result:
-                            self.display.update_display(result)
+                        if self.display.state != av.return_val:
+                            self.display.update_display(av.return_val)
                     # don't care, keep going
                     except TypeError:
                         print("typeError")
