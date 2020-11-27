@@ -84,7 +84,8 @@ class LaserSafetyRunner:
                 # make sure not empty array
                     try:
                         # async call to update the display canvas with the new input
-                        self.display.update_display(result)
+                        if self.display.state != result:
+                            self.display.update_display(result)
                     # don't care, keep going
                     except TypeError:
                         print("typeError")
