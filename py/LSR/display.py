@@ -21,7 +21,6 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
-        self.main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
@@ -32,7 +31,7 @@ class Display:
         try:
             # if screen is initialized, background sky blue
             if is_init_screen:
-                self.main_canvas.fill(SKY_BLUE)
+                av.main_canvas.fill(SKY_BLUE)
             # initialize pygame
             pygame.init()
             # set window title message
@@ -44,7 +43,7 @@ class Display:
             # center the waiting msg
             text_rect = text.get_rect(center=(int(DISPLAY_WIDTH / 2), int(DISPLAY_HEIGHT / 2)))
             # update canvas and render the waiting for reply msg
-            self.main_canvas.blit(text, text_rect)
+            av.main_canvas.blit(text, text_rect)
             pygame.display.update()
         except BaseException:
             return
@@ -141,9 +140,9 @@ class Display:
                 # recenter rectangle so there is an even amount of border on each side
                 rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
                 # background color
-                self.main_canvas.fill(BLACK)
+                av.main_canvas.fill(BLACK)
                 # draw image
-                self.main_canvas.blit(av.py_img, rect)
+                av.main_canvas.blit(av.py_img, rect)
                 # render changes
                 pygame.display.update()
 

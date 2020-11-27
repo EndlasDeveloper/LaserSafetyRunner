@@ -22,6 +22,8 @@ ser = Serial()
 serial_count = 0
 inputs_from_ard = 0
 
+main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
+
 serialBuffer = [0]*30
 serialCount = 0
 
