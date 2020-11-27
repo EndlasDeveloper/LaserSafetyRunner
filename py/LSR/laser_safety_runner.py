@@ -84,8 +84,8 @@ class LaserSafetyRunner:
                     result = av.return_val
                 # make sure not empty array
                     try:
-                        print(result)
-
+                        # print(result)
+                        x = 1
                         # async call to update the display canvas with the new input
                         # await self.display.update_display(result)
                     # don't care, keep going
