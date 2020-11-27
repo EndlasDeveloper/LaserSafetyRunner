@@ -30,6 +30,7 @@ class Display:
     ####################################################################
     def display_system_waiting(self, msg, is_init_screen):
         try:
+            self.setup_pygame_events()
             # if screen is initialized, background sky blue
             if is_init_screen:
                 av.main_canvas.fill(SKY_BLUE)
