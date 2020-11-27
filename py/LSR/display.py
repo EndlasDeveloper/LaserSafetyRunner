@@ -121,6 +121,7 @@ class Display:
     #######################################################################
     def update_pygame_image(self):
         self.img_path = self.get_display_image_path()
+        self.setup_pygame_events()
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
