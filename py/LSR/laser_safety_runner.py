@@ -29,7 +29,7 @@ class LaserSafetyRunner:
                 else:
                     av.has_port_connected_before = True
                 av.found_platform = True
-                break
+                return
                 # try:
                 #     self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
                 # except TypeError:
