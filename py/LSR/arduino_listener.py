@@ -74,45 +74,45 @@ class ArduinoListener:
     #              the port
     ####################################################################
     async def read_from_serial(self):
-
-        if av.ser.in_waiting > 0:
-            in_byte = av.ser.read()
-            av.serialBuffer[av.serialCount] = in_byte[0]
-            # print(ardUSB.in_waiting, serialCount, serialBuffer[serialCount])
-
-            if (av.serialBuffer[av.serialCount] > 127) and (av.serialCount > 4):
-                # print(serialBuffer[0:serialCount+1])
-                inputs_from_ard = av.serialBuffer[av.serialCount - 1] << 12 | \
-                                av.serialBuffer[av.serialCount - 2] << 8 | \
-                                av.serialBuffer[av.serialCount - 3] << 4 | \
-                                av.serialBuffer[av.serialCount - 4]
-                if av.serialBuffer[av.serialCount - 5] == inputs_from_ard % 128:
-                    av.ser.write(av.serialBuffer[av.serialCount - 5])
-                    print("                  ", inputs_from_ard)
-                else:
-                    print("CheckSum didnt Match!")
-                av.serialCount = 0
-            else:
-                av.serialCount += 1
-
-        # read if there is anything in the input buffer
         try:
-            while av.ser.in_waiting > 0:
-                print("inside serial read")
-                # append next byte to data buffer
+            if av.ser.in_waiting > 0:
                 in_byte = av.ser.read()
-                in_int = byte_to_int(in_byte)
-                av.arduino_data_buffer.append(in_byte)
-                # if there is 6 bytes and the last one is empty, just clear and return
-                # if header bits are set in data bytes or the serial count exceeds the buffer size
-                if len(av.arduino_data_buffer) > 5 and in_int > 127:
-                    if is_input_valid(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)]):
-                        result = byte_arr_to_int(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)])
-                        result_arr = []
-                        result_arr.append(result)
-                        av.return_val.append(result_arr)
-                        av.ser.write(0)
-                    return
+                av.serialBuffer[av.serialCount] = in_byte[0]
+                # print(ardUSB.in_waiting, serialCount, serialBuffer[serialCount])
+
+                if (av.serialBuffer[av.serialCount] > 127) and (av.serialCount > 4):
+                    # print(serialBuffer[0:serialCount+1])
+                    inputs_from_ard = av.serialBuffer[av.serialCount - 1] << 12 | \
+                                    av.serialBuffer[av.serialCount - 2] << 8 | \
+                                    av.serialBuffer[av.serialCount - 3] << 4 | \
+                                    av.serialBuffer[av.serialCount - 4]
+                    if av.serialBuffer[av.serialCount - 5] == inputs_from_ard % 128:
+                        av.ser.write(av.serialBuffer[av.serialCount - 5])
+                        print("                  ", inputs_from_ard)
+                    else:
+                        print("CheckSum didnt Match!")
+                    av.serialCount = 0
+                else:
+                    av.serialCount += 1
+
+            # # read if there is anything in the input buffer
+            # try:
+            #     while av.ser.in_waiting > 0:
+            #         print("inside serial read")
+            #         # append next byte to data buffer
+            #         in_byte = av.ser.read()
+            #         in_int = byte_to_int(in_byte)
+            #         av.arduino_data_buffer.append(in_byte)
+            #         # if there is 6 bytes and the last one is empty, just clear and return
+            #         # if header bits are set in data bytes or the serial count exceeds the buffer size
+            #         if len(av.arduino_data_buffer) > 5 and in_int > 127:
+            #             if is_input_valid(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)]):
+            #                 result = byte_arr_to_int(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)])
+            #                 result_arr = []
+            #                 result_arr.append(result)
+            #                 av.return_val.append(result_arr)
+            #                 av.ser.write(0)
+            #             return
 
         except SerialException:  # read failed
                 # set proper flags to indicate port needs to be re-opened
