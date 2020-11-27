@@ -165,4 +165,4 @@ class Display:
             if ev.type == pygame.MOUSEBUTTONDOWN or ev.type == pygame.KEYDOWN:
                 if ev.type == pygame.K_q:
                     pygame.quit()
-                    exit(1)
+                    raise BaseException
