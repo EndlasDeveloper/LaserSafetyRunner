@@ -4,6 +4,7 @@ from pygame import display, FULLSCREEN
 from constant_display import DISPLAY_WIDTH, DISPLAY_HEIGHT
 from asyncio import *
 
+
 this_platform = system()
 arduino_data_buffer = []
 arduino_data_buffer_copy = []
@@ -20,6 +21,9 @@ reset_serial_connection = False
 ser = Serial()
 serial_count = 0
 inputs_from_ard = 0
+
+serialBuffer = [0]*30
+serialCount = 0
 
 py_img_last = ""
 py_img = None
