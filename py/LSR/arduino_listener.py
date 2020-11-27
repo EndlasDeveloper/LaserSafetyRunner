@@ -91,7 +91,7 @@ class ArduinoListener:
                     if av.serialBuffer[av.serialCount - 5] == inputs_from_ard % 128:
                         av.ser.write(av.serialBuffer[av.serialCount - 5])
                         print("                  ", inputs_from_ard)
-                        av.return_val.append(inputs_from_ard)
+                        av.return_val = inputs_from_ard
                     else:
                         print("CheckSum didnt Match!")
                     av.serialCount = 0
