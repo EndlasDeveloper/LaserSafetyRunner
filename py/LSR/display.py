@@ -21,6 +21,7 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
+        self.setup_pygame_events()
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
@@ -154,7 +155,7 @@ class Display:
     #              using async methods
     ###################################################################
     @staticmethod
-    def _setup_pygame_events():
+    def setup_pygame_events():
         print("inside setup pygame events.")
         # get all events
         events = pygame.event.get()

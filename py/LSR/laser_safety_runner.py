@@ -59,7 +59,7 @@ class LaserSafetyRunner:
     #              from the serial port. This is done in an asynchronous
     #              fashion to speed up the UI.
     #########################################################################
-    async def run(self):
+    def run(self):
 
         # initialize pygame events synchronously
         # loop forever
@@ -67,7 +67,7 @@ class LaserSafetyRunner:
             # make sure the com port has been successfully opened
             if not av.ser.is_open:
             #    print(av.ser.is_open)
-                await self.init_serial_to_arduino()
+                self.init_serial_to_arduino()
             try:
                 try:
                     self.ard_listener.read_from_serial()
@@ -84,7 +84,7 @@ class LaserSafetyRunner:
                 # make sure not empty array
                     try:
                         # async call to update the display canvas with the new input
-                        await self.display.update_display(result)
+                        self.display.update_display(result)
                     # don't care, keep going
                     except TypeError:
                         print("typeError")
@@ -92,6 +92,6 @@ class LaserSafetyRunner:
             except BaseException:
                 from traceback import print_exc
                 print_exc()
-                return False
+            return False
 
 
