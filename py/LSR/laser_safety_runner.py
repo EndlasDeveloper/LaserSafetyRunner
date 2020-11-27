@@ -49,7 +49,6 @@ class LaserSafetyRunner:
         # init display obj
         self.display = Display()
         # init display with waiting msg
-        self.display.update_pygame_image()
         # initialize the arduino listener
         self.ard_listener = ArduinoListener()
 
@@ -68,7 +67,7 @@ class LaserSafetyRunner:
             # make sure the com port has been successfully opened
             if not av.ser.is_open:
             #    print(av.ser.is_open)
-                self.init_serial_to_arduino()
+                await self.init_serial_to_arduino()
             try:
                 try:
                     self.ard_listener.read_from_serial()

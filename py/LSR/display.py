@@ -1,7 +1,7 @@
 from constant_mask import *
 from const_img_paths import *
 from constant_display import *
-from pygame import *
+import pygame
 from serial_util import *
 
 
