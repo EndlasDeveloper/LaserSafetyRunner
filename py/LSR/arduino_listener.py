@@ -82,10 +82,8 @@ class ArduinoListener:
 
                 if (av.serialBuffer[av.serialCount] > 127) and (av.serialCount > 4):
                     # print(serialBuffer[0:serialCount+1])
-                    inputs_from_ard = av.serialBuffer[av.serialCount - 1] << 12 | \
-                                    av.serialBuffer[av.serialCount - 2] << 8 | \
-                                    av.serialBuffer[av.serialCount - 3] << 4 | \
-                                    av.serialBuffer[av.serialCount - 4]
+                    inputs_from_ard = byte_arr_to_int(av.serialBuffer[-6:])
+                    
                     if av.serialBuffer[av.serialCount - 5] == inputs_from_ard % 128:
                         av.ser.write(av.serialBuffer[av.serialCount - 5])
                         print("                  ", inputs_from_ard)
