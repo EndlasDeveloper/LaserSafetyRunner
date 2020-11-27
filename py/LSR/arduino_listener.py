@@ -22,14 +22,14 @@ class ArduinoListener:
     def open_port_and_flag_result(self):
         try:
             # open USB port
-            av.ser = Serial('/dev/ttyACM0', 500000, timeout=0)
+            av.ser = Serial(av.com_port, baudrate=BAUD_RATE, timeout=0)
 
             print(av.com_port)
 
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
 
-            sleep(0.02)
+            sleep(0.5)
 
             response = av.ser.read()
 

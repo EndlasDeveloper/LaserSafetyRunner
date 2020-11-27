@@ -63,6 +63,7 @@ class LaserSafetyRunner:
 
         # initialize pygame events synchronously
         # loop forever
+
         while True:
             # make sure the com port has been successfully opened
             try:
@@ -91,6 +92,6 @@ class LaserSafetyRunner:
             except BaseException:
                 from traceback import print_exc
                 print_exc()
-            return False
+                return False
 
 
