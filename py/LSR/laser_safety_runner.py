@@ -1,9 +1,12 @@
+##########################################################
+# File: laser_safety_runner.py
+# Description: Class in charge of controlling the
+#              flow of the program. Nothing too detailed
+#              should be implemented in this class
+#########################################################
+
 # imports
-from arduino_listener import ArduinoListener
-import app_vars as av
 from mocks_and_stubs import *
-from constant_display import WAITING_FOR_INPUT_DEVICE_MSG
-from serial_util import is_port_set, byte_arr_to_int
 from display import Display
 import pygame
 
@@ -68,10 +71,11 @@ class LaserSafetyRunner:
                     self.mock.mock_read_from_serial()
                 except TypeError:
                     print("typeError in ard_listener")
-                if av.return_val >= 0:
-                    print("return val " + str(av.return_val))
-                if self.display.state != av.return_val:
-                    self.display.update_display(av.return_val)
+                if av.shared_state < 0:
+                    return
+                # if the new state is different than the one currently in display, update display
+                if self.display.state != av.shared_state:
+                    self.display.update_display(av.shared_state)
                 # for safety, a base exception is the catch. To find out what the exception was, traceback is used
             except BaseException:
                 from traceback import print_exc

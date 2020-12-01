@@ -1,3 +1,10 @@
+##############################################################################
+# File: serial_util.py
+# Description: file containing some utility methods that are handy for more than
+#              one class in the application
+##############################################################################
+
+# imports
 import app_vars as av
 
 

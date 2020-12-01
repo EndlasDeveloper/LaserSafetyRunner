@@ -1,8 +1,18 @@
+############################################################
+# File: display.py
+# Description: file holding the display object for the program.
+#              This object is in charge of accepting new input
+#              states, comparing to the current one, and changing
+#              the display if necessary
+############################################################
+
+# imports
 from constant_mask import *
 from const_img_paths import *
 from constant_display import *
 import pygame
 from serial_util import *
+from app_vars import DISPLAY_HEIGHT, DISPLAY_WIDTH
 
 
 ###############################################################
@@ -18,14 +28,12 @@ class Display:
     #              image path and a flag for setting up pygame events.
     ####################################################################
     def __init__(self):
-        self.buffer = []
         self.state = 0
         self.img_path = ""
+        self.last_img_path = ""
         pygame.init()
         self.setup_pygame_events()
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
-        self.main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
-
 
     ####################################################################
     # Name: display_system_waiting
@@ -36,7 +44,7 @@ class Display:
             self.setup_pygame_events()
             # if screen is initialized, background sky blue
             if is_init_screen:
-                self.main_canvas.fill(SKY_BLUE)
+                av.main_canvas.fill(SKY_BLUE)
             # initialize pygame
             pygame.init()
             # set window title message
@@ -48,9 +56,11 @@ class Display:
             # center the waiting msg
             text_rect = text.get_rect(center=(int(DISPLAY_WIDTH / 2), int(DISPLAY_HEIGHT / 2)))
             # update canvas and render the waiting for reply msg
-            self.main_canvas.blit(text, text_rect)
+            av.main_canvas.blit(text, text_rect)
             pygame.display.update()
         except BaseException:
+            from traceback import print_exc
+            print_exc()
             return
 
     ###############################################################################
@@ -60,16 +70,10 @@ class Display:
     #              updated based on the hashed flags
     ###############################################################################
     def update_display(self, state):
+        # set the class attr state
         self.state = state
-        print("Display state: " + str(self.state))
-        # display waiting message if com port connection failure
-        print("is_com_port_open, has_port_connected_before: " + str(av.is_com_port_open) + ", " +
-              str(av.has_port_connected_before))
-        if not av.is_com_port_open and not av.has_port_connected_before:
-            self.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
-        elif not av.is_com_port_open and av.has_port_connected_before and av.found_platform:
-            self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
-        else:
+        if self.display_determine_waiting() is not None:
+            # display laser safety image
             self.update_pygame_image()
 
     #######################################################################################
@@ -126,11 +130,7 @@ class Display:
     def update_pygame_image(self):
         self.img_path = self.get_display_image_path()
         # display waiting message if com port connection failure
-        if not av.is_com_port_open and not av.has_port_connected_before:
-            self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
-        elif not av.is_com_port_open and av.has_port_connected_before:
-            self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
-        else:
+        if self.display_determine_waiting() is None:
             print("av last py img path: " + av.last_py_img_path)
             print("img path: " + self.img_path)
             # change stuff only if stuff changed
@@ -145,11 +145,22 @@ class Display:
                 # recenter rectangle so there is an even amount of border on each side
                 rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
                 # background color
-                self.main_canvas.fill(BLACK)
+                av.main_canvas.fill(BLACK)
                 # draw image
-                self.main_canvas.blit(av.py_img, rect)
+                av.main_canvas.blit(av.py_img, rect)
                 # render changes
                 pygame.display.update()
+
+    #######################################################################
+    # Name: display_determine_waiting
+    # Description: helper method to avoid code copying
+    #######################################################################
+    def display_determine_waiting(self):
+        if not av.is_com_port_open and not av.has_port_connected_before:
+            self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
+        elif not av.is_com_port_open and av.has_port_connected_before:
+            self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
+        return None
 
     ###################################################################
     # Name: _setup_pygame_events
@@ -167,4 +178,3 @@ class Display:
                 pygame.display.quit()
                 pygame.quit()
                 sys.exit()
-

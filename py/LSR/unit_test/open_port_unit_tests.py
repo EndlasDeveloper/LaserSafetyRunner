@@ -1,6 +1,7 @@
-#########################################
-# Unit tests for opening the serial port
-#########################################
+#######################################################
+# File: open_port_unit_tests.py
+# Description: Unit tests for opening the serial port
+#######################################################
 
 # imports
 import unittest

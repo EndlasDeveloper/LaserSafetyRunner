@@ -1,3 +1,11 @@
+#######################################################
+# File: display_unit_tests.py
+# Description: unit tests to test the efficacy of display
+#              method that returns an image path based on
+#              a packed data integer
+#######################################################
+
+# imports
 import unittest
 from display import *
 

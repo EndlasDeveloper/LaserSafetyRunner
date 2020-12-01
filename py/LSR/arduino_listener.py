@@ -1,7 +1,14 @@
-from serial import Serial, SerialException, EIGHTBITS
+################################################
+# File: arduino_listener
+# Description: file holding the arduino listener class. This class is in charge of managing the serial port of the Pi
+#              side, reading from the arduino,k checking if the read input is valid and then pushing the valid result
+#              to a shared piece of memory for the display to use in rendering the UI
+################################################
+# imports
+from serial import Serial, SerialException
 from constant_serial import *
 from serial_util import *
-from time import sleep
+from platform import system
 
 
 ####################################################################
@@ -10,6 +17,20 @@ from time import sleep
 #              input Arduino.
 ####################################################################
 class ArduinoListener:
+
+    #########################################################################
+    # Name: constructor
+    # Description: initializes all class variables including the Serial obj
+    #              used to communicate with the Arduino
+    #########################################################################
+    def __init__(self):
+        self.ser = Serial()
+        self.com_port = ""
+        self.this_platform = system()
+        self.serial_buffer = [0] * 30
+        self.serial_count = 0
+        self.arduino_data_buffer = []
+        self.arduino_data_buffer_copy = []
 
     #############################################################################
     # Name: open_port_and_send_call_out
@@ -22,15 +43,15 @@ class ArduinoListener:
     def open_port_and_flag_result(self):
         try:
             # open USB port
-            av.ser = Serial(av.com_port, baudrate=BAUD_RATE, timeout=0)
+            self.ser = Serial(av.com_port, baudrate=BAUD_RATE, timeout=0)
 
             print(av.com_port)
 
-            av.ser.write(RESET_COUNTS)
-            av.ser.write(CONTACT_TO_ARD)
+            self.ser.write(RESET_COUNTS)
+            self.ser.write(CONTACT_TO_ARD)
 
             print("before read")
-            response = av.ser.read()
+            response = self.ser.read()
             print("after read")
             # verify response
             if response == CONTACT_TO_ARD:
@@ -50,10 +71,10 @@ class ArduinoListener:
     ####################################################################
     def determine_platform_and_connect(self):
         com_port_prefix = ""
-        if av.this_platform == WIN:
+        if self.this_platform == WIN:
             com_port_prefix = WIN_COM_PORT_PREFIX
             av.found_platform = True
-        if av.this_platform == LIN:
+        if self.this_platform == LIN:
             com_port_prefix = LIN_COM_PORT_PREFIX
             av.found_platform = True
 
@@ -75,35 +96,35 @@ class ArduinoListener:
     ####################################################################
     def read_from_serial(self):
         try:
-            if av.ser.in_waiting > 0:
-                in_byte = av.ser.read()
-                av.serialBuffer[av.serialCount] = in_byte[0]
+            if self.ser.in_waiting > 0:
+                in_byte = self.ser.read()
+                self.serial_buffer[self.serial_count] = in_byte[0]
                 # print(ardUSB.in_waiting, serialCount, serialBuffer[serialCount])
 
-                if (av.serialBuffer[av.serialCount] > 127) and (av.serialCount > 4):
+                if (self.serial_buffer[av.serial_count] > 127) and (self.serial_count > 4):
                     # print(serialBuffer[0:serialCount+1])
 
-                    inputs_from_ard = av.serialBuffer[av.serialCount - 1] << 12 | \
-                                    av.serialBuffer[av.serialCount - 2] << 8 | \
-                                    av.serialBuffer[av.serialCount - 3] << 4 | \
-                                    av.serialBuffer[av.serialCount - 4]
+                    inputs_from_ard = self.serial_buffer[self.serial_count - 1] << 12 | \
+                                    self.serial_buffer[self.serial_count - 2] << 8 | \
+                                    self.serial_buffer[self.serial_count - 3] << 4 | \
+                                    self.serial_buffer[self.serial_count - 4]
 
-                    if av.serialBuffer[av.serialCount - 5] == inputs_from_ard % 128:
-                        av.ser.write(av.serialBuffer[av.serialCount - 5])
+                    if self.serial_buffer[self.serial_count - 5] == inputs_from_ard % 128:
+                        self.ser.write(self.serial_buffer[self.serial_count - 5])
                         print("                  ", inputs_from_ard)
-                        av.return_val = inputs_from_ard
+                        av.shared_state = inputs_from_ard
                     else:
                         print("CheckSum didnt Match!")
-                    av.serialCount = 0
+                    self.serial_count = 0
                 else:
-                    av.serialCount += 1
+                    self.serial_count += 1
 
             # # read if there is anything in the input buffer
             # try:
-            #     while av.ser.in_waiting > 0:
+            #     while self.ser.in_waiting > 0:
             #         print("inside serial read")
             #         # append next byte to data buffer
-            #         in_byte = av.ser.read()
+            #         in_byte = self.ser.read()
             #         in_int = byte_to_int(in_byte)
             #         av.arduino_data_buffer.append(in_byte)
             #         # if there is 6 bytes and the last one is empty, just clear and return
@@ -114,7 +135,7 @@ class ArduinoListener:
             #                 result_arr = []
             #                 result_arr.append(result)
             #                 av.return_val.append(result_arr)
-            #                 av.ser.write(0)
+            #                 self.ser.write(0)
             #             return
 
         except SerialException:  # read failed

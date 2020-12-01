@@ -1,3 +1,8 @@
+####################################################################################
+# File: const_img_paths
+# Description: file holding the final strings containing the resource image names.
+####################################################################################
+
 # IMAGE FILES AND PATH
 IMG_PATH = "resources/"
 ESTOP_IMG = IMG_PATH + "estop_active.jpg"

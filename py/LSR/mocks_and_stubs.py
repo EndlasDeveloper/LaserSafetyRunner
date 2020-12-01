@@ -26,7 +26,7 @@ class MockArdListener:
         else:
             self.cur_num <<= 1
         sleep(SLEEP_TIME)
-        av.return_val = self.cur_num
+        av.shared_state = self.cur_num
         return
 
     ################################################################################
