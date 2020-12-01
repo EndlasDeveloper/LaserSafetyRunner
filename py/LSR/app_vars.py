@@ -11,7 +11,7 @@ arduino_data_buffer_copy = []
 data_buffer_mutex = Lock()
 laser_safety_runner = None
 com_port = ""
-return_val = 0
+return_val = -1
 
 
 has_port_connected_before = False

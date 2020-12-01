@@ -19,25 +19,19 @@ class LaserSafetyRunner:
     ########################################################################
     def init_serial_to_arduino(self):
         # keep searching for com port till one gives arduino response
-        while True:
-            # if successful connect, set flags and display
-            if self.ard_listener.determine_platform_and_connect():
-                print("inside init serial to arduino")
-                av.is_com_port_open = True
-                if av.has_port_connected_before is None:
-                    av.has_port_connected_before = False
-                else:
-                    av.has_port_connected_before = True
-                av.found_platform = True
-                return
-                # try:
-                #     self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)
-                # except TypeError:
-                #     print("TypeError: await self.display.display_system_waiting(WAITING_FOR_INPUT_DEVICE_MSG, True)")
-                # print("\nis port set:" + str(is_port_set()))
-                # print("Connected successfully to com port: " + av.com_port)
+
+        # if successful connect, set flags and display
+        if self.ard_listener.determine_platform_and_connect():
+            print("inside init serial to arduino")
+            av.is_com_port_open = True
+            if av.has_port_connected_before is None:
+                av.has_port_connected_before = False
             else:
-                print("no ard response...")
+                av.has_port_connected_before = True
+            av.found_platform = True
+            return
+        else:
+            print("no ard response...")
 
     #########################################################################
     # Name: constructor
@@ -47,7 +41,7 @@ class LaserSafetyRunner:
     #########################################################################
     def __init__(self):
         # init display obj
-        self.display = Display()
+        # self.display = Display()
         # init display with waiting msg
         # initialize the arduino listener
         self.ard_listener = ArduinoListener()
@@ -63,31 +57,33 @@ class LaserSafetyRunner:
 
         # initialize pygame events synchronously
         # loop forever
-
         while True:
             # make sure the com port has been successfully opened
             try:
-                if not av.ser.is_open:
+                if not is_port_set():
+                    print("is not open")
                     self.init_serial_to_arduino()
-                try:
-                    self.ard_listener.read_from_serial()
-                # sometimes throws this, if ignored, the system seems
-                # to go on without problems
-                except TypeError:
-                    print("typeError in ard_listener")
-                # init result arr
-                # if there is something return_val
-                if av.return_val >= 0:
-                    # get the most recent return_val
-                # make sure not empty array
+                else:
                     try:
-                        # async call to update the display canvas with the new input
-                        if self.display.state != av.return_val:
-                            self.display.update_display(av.return_val)
-                    # don't care, keep going
+                        self.ard_listener.read_from_serial()
+                    # sometimes throws this, if ignored, the system seems
+                    # to go on without problems
                     except TypeError:
-                        print("typeError")
-            # for safety, a base exception is the catch. To find out what the exception was, traceback is used
+                        print("typeError in ard_listener")
+                    # init result arr
+                    # if there is something return_val
+                    if av.return_val >= 0:
+                        print("return val " + str(av.return_val))
+                        # get the most recent return_val
+                    # make sure not empty array
+                    #     try:
+                    #         # async call to update the display canvas with the new input
+                    #         if self.display.state != av.return_val:
+                    #             self.display.update_display(av.return_val)
+                        # don't care, keep going
+                        # except TypeError:
+                        #     print("typeError")
+                # for safety, a base exception is the catch. To find out what the exception was, traceback is used
             except BaseException:
                 from traceback import print_exc
                 print_exc()

@@ -29,10 +29,9 @@ class ArduinoListener:
             av.ser.write(RESET_COUNTS)
             av.ser.write(CONTACT_TO_ARD)
 
-            sleep(0.5)
-
+            print("before read")
             response = av.ser.read()
-
+            print("after read")
             # verify response
             if response == CONTACT_TO_ARD:
                 print("response: " + str(response))
@@ -57,6 +56,7 @@ class ArduinoListener:
         if av.this_platform == LIN:
             com_port_prefix = LIN_COM_PORT_PREFIX
             av.found_platform = True
+
         for com_num in range(9):
             av.com_port = com_port_prefix + str(com_num)
             # try to connect to each, see if a response from the arduino returns
@@ -130,6 +130,7 @@ class ArduinoListener:
     def set_open_port_flags():
         av.has_port_connected_before = True
         av.is_com_port_open = True
+        av.found_platform = True
 
     ##################################################################
     # Name: invalidate_open_port_flags
@@ -139,3 +140,4 @@ class ArduinoListener:
     def invalidate_open_port_flags():
         av.has_port_connected_before = False
         av.is_com_port_open = False
+        av.found_platform = False

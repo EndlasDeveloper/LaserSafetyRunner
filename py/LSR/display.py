@@ -21,7 +21,6 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
-        self.setup_pygame_events()
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
@@ -165,5 +164,5 @@ class Display:
             # click mouse or press button to try and quit application
             if ev.type == pygame.MOUSEBUTTONDOWN or ev.type == pygame.KEYDOWN:
                 if ev.type == pygame.K_q:
-                    pygame.quit()
-                    raise BaseException
+                    pygame.display.quit()
+                    exit(1)
