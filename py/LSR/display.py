@@ -21,7 +21,11 @@ class Display:
         self.buffer = []
         self.state = 0
         self.img_path = ""
+        pygame.init()
+        self.setup_pygame_events()
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
+        self.main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
+
 
     ####################################################################
     # Name: display_system_waiting
@@ -32,7 +36,7 @@ class Display:
             self.setup_pygame_events()
             # if screen is initialized, background sky blue
             if is_init_screen:
-                av.main_canvas.fill(SKY_BLUE)
+                self.main_canvas.fill(SKY_BLUE)
             # initialize pygame
             pygame.init()
             # set window title message
@@ -44,7 +48,7 @@ class Display:
             # center the waiting msg
             text_rect = text.get_rect(center=(int(DISPLAY_WIDTH / 2), int(DISPLAY_HEIGHT / 2)))
             # update canvas and render the waiting for reply msg
-            av.main_canvas.blit(text, text_rect)
+            self.main_canvas.blit(text, text_rect)
             pygame.display.update()
         except BaseException:
             return
@@ -121,7 +125,6 @@ class Display:
     #######################################################################
     def update_pygame_image(self):
         self.img_path = self.get_display_image_path()
-        self.setup_pygame_events()
         # display waiting message if com port connection failure
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
@@ -142,9 +145,9 @@ class Display:
                 # recenter rectangle so there is an even amount of border on each side
                 rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
                 # background color
-                av.main_canvas.fill(BLACK)
+                self.main_canvas.fill(BLACK)
                 # draw image
-                av.main_canvas.blit(av.py_img, rect)
+                self.main_canvas.blit(av.py_img, rect)
                 # render changes
                 pygame.display.update()
 
@@ -157,12 +160,11 @@ class Display:
     ###################################################################
     @staticmethod
     def setup_pygame_events():
-        print("inside setup pygame events.")
-        # get all events
         events = pygame.event.get()
-        for ev in events:
-            # click mouse or press button to try and quit application
-            if ev.type == pygame.MOUSEBUTTONDOWN or ev.type == pygame.KEYDOWN:
-                if ev.type == pygame.K_q:
-                    pygame.display.quit()
-                    exit(1)
+        for event in events:
+            if event.type == pygame.K_ESCAPE or event.type == pygame.K_q:
+                import sys
+                pygame.display.quit()
+                pygame.quit()
+                sys.exit()
+

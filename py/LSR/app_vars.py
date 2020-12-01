@@ -13,7 +13,7 @@ laser_safety_runner = None
 com_port = ""
 return_val = -1
 
-
+running = True
 has_port_connected_before = False
 is_com_port_open = False
 found_platform = False
@@ -22,7 +22,6 @@ ser = Serial()
 serial_count = 0
 inputs_from_ard = 0
 
-main_canvas = display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), FULLSCREEN)
 
 serialBuffer = [0]*30
 serialCount = 0
