@@ -26,16 +26,16 @@ class MockArdListener:
         else:
             self.cur_num <<= 1
         sleep(SLEEP_TIME)
-        av.shared_state = self.cur_num
-        return
+        return self.cur_num
 
     ################################################################################
     # Name: mock_initialize_to_arduino
     # Description: mocks the successful connection of the Pi to the Arduino
-    # Description: mocks the successful connection of the Pi to the Arduino
     ################################################################################
     @staticmethod
     def mock_initialize_to_arduino():
+        # just set all port open flags
         av.found_platform = True
         av.is_com_port_open = True
         av.has_port_connected_before = True
+        return True

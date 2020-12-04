@@ -32,16 +32,15 @@ class Display:
         self.img_path = ""
         self.last_img_path = ""
         pygame.init()
-        self.setup_pygame_events()
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
     # Name: display_system_waiting
     # Description: handles setting up the waiting screen and rendering
     ####################################################################
-    def display_system_waiting(self, msg, is_init_screen):
+    @staticmethod
+    def display_system_waiting(msg, is_init_screen):
         try:
-            self.setup_pygame_events()
             # if screen is initialized, background sky blue
             if is_init_screen:
                 av.main_canvas.fill(SKY_BLUE)
@@ -72,7 +71,7 @@ class Display:
     def update_display(self, state):
         # set the class attr state
         self.state = state
-        if self.display_determine_waiting() is not None:
+        if self.display_determine_waiting() is not True:
             # display laser safety image
             self.update_pygame_image()
 
@@ -130,7 +129,7 @@ class Display:
     def update_pygame_image(self):
         self.img_path = self.get_display_image_path()
         # display waiting message if com port connection failure
-        if self.display_determine_waiting() is None:
+        if self.display_determine_waiting() is not True:
             print("av last py img path: " + av.last_py_img_path)
             print("img path: " + self.img_path)
             # change stuff only if stuff changed
@@ -158,9 +157,12 @@ class Display:
     def display_determine_waiting(self):
         if not av.is_com_port_open and not av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
+            return True
         elif not av.is_com_port_open and av.has_port_connected_before:
             self.display_system_waiting(OPENING_COM_PORTS_MSG, False)
-        return None
+            return True
+        else:
+            return False
 
     ###################################################################
     # Name: _setup_pygame_events

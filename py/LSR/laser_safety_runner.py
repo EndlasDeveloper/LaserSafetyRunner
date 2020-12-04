@@ -29,6 +29,7 @@ class LaserSafetyRunner:
         # init display with waiting msg
         # initialize the arduino listener
         self.mock = MockArdListener()
+        self.running = False
         # self.ard_listener = ArduinoListener()
 
     ########################################################################
@@ -61,21 +62,22 @@ class LaserSafetyRunner:
     #########################################################################
     def run(self):
         """ self.initialize_to_arduino() """
-        self.mock.mock_initialize_to_arduino()
-        while av.running:
+        self.running = self.mock.mock_initialize_to_arduino()
+        while self.running:
             self.setup_pygame_events()
+            state = -1
             # make sure the com port has been successfully opened
             try:
                 try:
                     """ self.ard_listener.read_from_serial() """
-                    self.mock.mock_read_from_serial()
+                    state = self.mock.mock_read_from_serial()
+                    print(state)
                 except TypeError:
                     print("typeError in ard_listener")
-                if av.shared_state < 0:
-                    return
                 # if the new state is different than the one currently in display, update display
-                if self.display.state != av.shared_state:
-                    self.display.update_display(av.shared_state)
+                if self.display.state != state:
+                    print("display.state, state: " + str(self.display.state) + ", " + str(state))
+                    self.display.update_display(state)
                 # for safety, a base exception is the catch. To find out what the exception was, traceback is used
             except BaseException:
                 from traceback import print_exc
@@ -83,10 +85,9 @@ class LaserSafetyRunner:
                 return False
         return True
 
-    @staticmethod
-    def setup_pygame_events():
+    def setup_pygame_events(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 # click a 'q' or the 'esc' key to quit the program
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                    av.running = False
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.MOUSEBUTTONDOWN:
+                    self.running = False
