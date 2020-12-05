@@ -7,11 +7,7 @@ DISPLAY_CAPTION_MSG = "LASER SAFETY RUNNER"
 WAITING_FOR_INPUT_DEVICE_MSG = "Waiting for input device reply..."
 OPENING_COM_PORTS_MSG = "Finding open COM port..."
 
-
-
-BASE_UI_REFRESH_RATE = 1.0
-
-# COLORS
+# COLORS -- not all are used, but are here for convienence
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)

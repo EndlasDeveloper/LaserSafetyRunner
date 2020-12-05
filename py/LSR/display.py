@@ -7,12 +7,15 @@
 ############################################################
 
 # imports
-from constant_mask import *
-from const_img_paths import *
+from constant_masks import *
+from constant_img_paths import *
 from constant_display import *
 import pygame
 from serial_util import *
-from app_vars import DISPLAY_HEIGHT, DISPLAY_WIDTH
+
+# to get pygame to display full screen, must set display w and h to 640, 480 and set full screen flag
+DISPLAY_WIDTH = 640
+DISPLAY_HEIGHT = 480
 
 
 ###############################################################
@@ -21,6 +24,7 @@ from app_vars import DISPLAY_HEIGHT, DISPLAY_WIDTH
 #              display monitor thread
 ###############################################################
 class Display:
+
     ####################################################################
     # Name: constructor
     # Description: initializes a buffer to hold a copy of result_var,
@@ -28,22 +32,32 @@ class Display:
     #              image path and a flag for setting up pygame events.
     ####################################################################
     def __init__(self):
+        # the current state of the system
         self.state = 0
+
+        # pygame images
+        self.py_img_last = ""
+        self.py_img_obj = None
+        self.last_py_img_path = ""
         self.img_path = ""
         self.last_img_path = ""
+
+        # initialize pygame
         pygame.init()
+        # setup canvas
+        self.main_canvas = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.FULLSCREEN)
+        # render initial waiting to connect message
         self.display_system_waiting(OPENING_COM_PORTS_MSG, True)
 
     ####################################################################
     # Name: display_system_waiting
     # Description: handles setting up the waiting screen and rendering
     ####################################################################
-    @staticmethod
-    def display_system_waiting(msg, is_init_screen):
+    def display_system_waiting(self, msg, is_init_screen):
         try:
             # if screen is initialized, background sky blue
             if is_init_screen:
-                av.main_canvas.fill(SKY_BLUE)
+                self.main_canvas.fill(SKY_BLUE)
             # initialize pygame
             pygame.init()
             # set window title message
@@ -55,7 +69,7 @@ class Display:
             # center the waiting msg
             text_rect = text.get_rect(center=(int(DISPLAY_WIDTH / 2), int(DISPLAY_HEIGHT / 2)))
             # update canvas and render the waiting for reply msg
-            av.main_canvas.blit(text, text_rect)
+            self.main_canvas.blit(text, text_rect)
             pygame.display.update()
         except BaseException:
             from traceback import print_exc
@@ -69,7 +83,9 @@ class Display:
     #              updated based on the hashed flags
     ###############################################################################
     def update_display(self, state):
-        # set the class attr state
+        # state is same as before, so just return
+        if state == self.state:
+            return
         self.state = state
         if self.display_determine_waiting() is not True:
             # display laser safety image
@@ -130,23 +146,24 @@ class Display:
         self.img_path = self.get_display_image_path()
         # display waiting message if com port connection failure
         if self.display_determine_waiting() is not True:
-            print("av last py img path: " + av.last_py_img_path)
+            print("av last py img path: " + self.last_py_img_path)
             print("img path: " + self.img_path)
             # change stuff only if stuff changed
-            if av.last_py_img_path != self.img_path:
-                av.py_img_last = self.img_path
+            if self.last_py_img_path != self.img_path:
+                self.py_img_last = self.img_path
                 # load image with pygame
                 # scale image to 95% of screen wid and hit
-                av.py_img = pygame.image.load(self.img_path)
-                av.py_img = pygame.transform.scale(av.py_img, (int(0.95 * DISPLAY_WIDTH), int(0.95 * DISPLAY_HEIGHT)))
+                self.py_img_obj = pygame.image.load(self.img_path)
+                self.py_img_obj = pygame.transform.scale(self.py_img_obj, (int(0.95 * DISPLAY_WIDTH),
+                                                                           int(0.95 * DISPLAY_HEIGHT)))
                 # get reference to the image rectangle
-                rect = av.py_img.get_rect()
+                rect = self.py_img_obj.get_rect()
                 # recenter rectangle so there is an even amount of border on each side
                 rect = rect.move(int(0.05 * DISPLAY_WIDTH / 2), int(0.05 * DISPLAY_HEIGHT / 2))
                 # background color
-                av.main_canvas.fill(BLACK)
+                self.main_canvas.fill(BLACK)
                 # draw image
-                av.main_canvas.blit(av.py_img, rect)
+                self.main_canvas.blit(self.py_img_obj, rect)
                 # render changes
                 pygame.display.update()
 
@@ -164,19 +181,3 @@ class Display:
         else:
             return False
 
-    ###################################################################
-    # Name: _setup_pygame_events
-    # Description: sets up a few event handlers for pygame. Right now,
-    #              the program crashes when buttons are clicked. This
-    #              is suspected to stem from the inherent complexity
-    #              using async methods
-    ###################################################################
-    @staticmethod
-    def setup_pygame_events():
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.K_ESCAPE or event.type == pygame.K_q:
-                import sys
-                pygame.display.quit()
-                pygame.quit()
-                sys.exit()

@@ -32,27 +32,6 @@ class LaserSafetyRunner:
         self.running = False
         # self.ard_listener = ArduinoListener()
 
-    ########################################################################
-    # Name: initialize_to_arduino
-    # Description: initializes the serial connection between the RPi and
-    #              Arduino
-    ########################################################################
-    def initialize_to_arduino(self):
-        # keep searching for com port till one gives arduino response
-
-        # if successful connect, set flags and display
-        if self.ard_listener.determine_platform_and_connect():
-            # print("inside init serial to arduino")
-            av.is_com_port_open = True
-            if av.has_port_connected_before is None:
-                av.has_port_connected_before = False
-            else:
-                av.has_port_connected_before = True
-            av.found_platform = True
-            return
-        else:
-            print("no ard response...")
-
     #########################################################################
     # Name: run
     # Description: the main infinite loop where data is collected from the
@@ -61,23 +40,32 @@ class LaserSafetyRunner:
     #              fashion to speed up the UI.
     #########################################################################
     def run(self):
-        """ self.initialize_to_arduino() """
+        # real initialization
+        """self.running = self.ard_listener.initialize_to_arduino() """
+        # mocked initialization
         self.running = self.mock.mock_initialize_to_arduino()
+
         while self.running:
+            # sets up button-press/mouse-click to quit program from pygame
             self.setup_pygame_events()
-            state = -1
+            state = None
             # make sure the com port has been successfully opened
             try:
                 try:
-                    """ self.ard_listener.read_from_serial() """
+                    # real read
+                    """state = self.ard_listener.read_from_serial() """
+                    # mocked read
                     state = self.mock.mock_read_from_serial()
-                    print(state)
                 except TypeError:
                     print("typeError in ard_listener")
+
                 # if the new state is different than the one currently in display, update display
-                if self.display.state != state:
-                    print("display.state, state: " + str(self.display.state) + ", " + str(state))
+                print("display.state, state: " + str(self.display.state) + ", " + str(state))
+
+                if state is not None:
+                    # update pygame display
                     self.display.update_display(state)
+
                 # for safety, a base exception is the catch. To find out what the exception was, traceback is used
             except BaseException:
                 from traceback import print_exc
@@ -85,9 +73,17 @@ class LaserSafetyRunner:
                 return False
         return True
 
+    ###################################################################
+    # Name: setup_pygame_events
+    # Description: sets up a few event handlers for pygame. Right now,
+    #              the program crashes when buttons are clicked. This
+    #              is suspected to stem from the inherent complexity
+    #              using async methods
+    ###################################################################
     def setup_pygame_events(self):
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                # click a 'q' or the 'esc' key to quit the program
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                # press 'q', 'esc', or mouse-click to quit the program
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q or event.key == pygame.MOUSEBUTTONDOWN:
+                    # gets laser safety runner .run to exit the loop
                     self.running = False

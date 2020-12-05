@@ -6,9 +6,24 @@
 ################################################
 # imports
 from serial import Serial, SerialException
-from constant_serial import *
 from serial_util import *
 from platform import system
+
+# SYSTEMS
+WIN = 'Windows'
+LIN = 'Linux'
+
+# COM PORT AND PORT SPECS
+WIN_COM_PORT_PREFIX = "COM"
+LIN_COM_PORT_PREFIX = "/dev/ttyACM"
+
+CONTACT_TO_ARD = b'\x93'
+REQUEST_FOR_DATA = b'\xAA'
+RESET_COUNTS = b'\x99'
+
+# COM PORT SPECS
+BAUD_RATE = 115200
+BUFFER_SIZE = 30
 
 
 ####################################################################
@@ -24,13 +39,17 @@ class ArduinoListener:
     #              used to communicate with the Arduino
     #########################################################################
     def __init__(self):
+        # serial obj
         self.ser = Serial()
+        # com port to connect to
         self.com_port = ""
+        # string of the os platform
         self.this_platform = system()
-        self.serial_buffer = [0] * 30
+        # software buffer to read arduino inputs into
+        self.serial_buffer = [0] * BUFFER_SIZE
+        # keeps track of number of reads
         self.serial_count = 0
-        self.arduino_data_buffer = []
-        self.arduino_data_buffer_copy = []
+        self.data_packet = None
 
     #############################################################################
     # Name: open_port_and_send_call_out
@@ -44,24 +63,25 @@ class ArduinoListener:
         try:
             # open USB port
             self.ser = Serial(av.com_port, baudrate=BAUD_RATE, timeout=0)
-
+            # debugging print the successful com port
             print(av.com_port)
-
+            # initialize contact with arduino
             self.ser.write(RESET_COUNTS)
             self.ser.write(CONTACT_TO_ARD)
-
-            print("before read")
+            # get arduino response
             response = self.ser.read()
-            print("after read")
             # verify response
             if response == CONTACT_TO_ARD:
                 print("response: " + str(response))
+                # valid response, so set open port flags and return True
                 self.set_open_port_flags()
                 return True
             else:
+                # invalid response
                 self.invalidate_open_port_flags()
                 return False
         except SerialException:
+            # something went wrong with serial connection, so invalid response
             self.invalidate_open_port_flags()
             return False
 
@@ -71,19 +91,22 @@ class ArduinoListener:
     ####################################################################
     def determine_platform_and_connect(self):
         com_port_prefix = ""
+        # see if we're on windows
         if self.this_platform == WIN:
             com_port_prefix = WIN_COM_PORT_PREFIX
             av.found_platform = True
-        if self.this_platform == LIN:
+        # see if we're on linux
+        elif self.this_platform == LIN:
             com_port_prefix = LIN_COM_PORT_PREFIX
             av.found_platform = True
 
+        # iterate through com prefix with 0-9 numbering to look for the arduino
         for com_num in range(9):
             av.com_port = com_port_prefix + str(com_num)
             # try to connect to each, see if a response from the arduino returns
             if self.open_port_and_flag_result():
                 return True
-
+        # no com ports worked, so make sure flags are invalidated, and return False
         self.invalidate_open_port_flags()
         return False
 
@@ -101,20 +124,21 @@ class ArduinoListener:
                 self.serial_buffer[self.serial_count] = in_byte[0]
                 # print(ardUSB.in_waiting, serialCount, serialBuffer[serialCount])
 
-                if (self.serial_buffer[av.serial_count] > 127) and (self.serial_count > 4):
+                if (self.serial_buffer[self.serial_count] > 127) and (self.serial_count > 4):
                     # print(serialBuffer[0:serialCount+1])
 
-                    inputs_from_ard = self.serial_buffer[self.serial_count - 1] << 12 | \
-                                    self.serial_buffer[self.serial_count - 2] << 8 | \
-                                    self.serial_buffer[self.serial_count - 3] << 4 | \
-                                    self.serial_buffer[self.serial_count - 4]
+                    inputs_from_ard = self.data_bytes_to_int([self.serial_buffer[self.serial_count - 4],
+                                                             self.serial_buffer[self.serial_count - 3],
+                                                             self.serial_buffer[self.serial_count - 2],
+                                                             self.serial_buffer[self.serial_count - 1]])
 
                     if self.serial_buffer[self.serial_count - 5] == inputs_from_ard % 128:
                         self.ser.write(self.serial_buffer[self.serial_count - 5])
                         print("                  ", inputs_from_ard)
-                        av.shared_state = inputs_from_ard
+                        return inputs_from_ard
                     else:
-                        print("CheckSum didnt Match!")
+                        print("CheckSum didn't Match!")
+
                     self.serial_count = 0
                 else:
                     self.serial_count += 1
@@ -142,11 +166,70 @@ class ArduinoListener:
             print("Serial ex")
             # set proper flags to indicate port needs to be re-opened
             self.invalidate_open_port_flags()
+            return None
 
-    #########################################################
+    ########################################################################
+    # Name: initialize_to_arduino
+    # Description: initializes the serial connection between the RPi and
+    #              Arduino
+    ########################################################################
+    def initialize_to_arduino(self):
+        # keep searching for com port till one gives arduino response
+        # if successful connect, set flags and display
+        if self.determine_platform_and_connect():
+            # print("inside init serial to arduino")
+            av.is_com_port_open = True
+            if av.has_port_connected_before is None:
+                av.has_port_connected_before = False
+            else:
+                av.has_port_connected_before = True
+            av.found_platform = True
+            return True
+        else:
+            print("no ard response...")
+            return False
+
+    #######################################################################################
+    # Name: is_input_valid
+    # Description: takes a byte array as a parameter. Method returns whether the byte arr
+    #              input is a valid input or not as a bool
+    #######################################################################################
+    def is_input_valid(self, input_byte_arr):
+        if input_byte_arr[5] < b'\x80':
+            print("is_input_valid: magic byte wasn't set properly")
+            return False
+
+        if input_byte_arr[1] > b'\x0F' or input_byte_arr[2] > b'\x0F' or\
+                input_byte_arr[3] > b'\x0F' or input_byte_arr[4] > b'\x0F':
+            return False
+
+        input_int = self.data_bytes_to_int([input_byte_arr[1], input_byte_arr[2], input_byte_arr[3], input_byte_arr[4]])
+        print("checksum: " + str(input_int % 128))
+        print("byte arr [0]: " + str(input_byte_arr[0]))
+        ck_sum = int.from_bytes(input_byte_arr[0], byteorder='big')
+        if (input_int % 128) != ck_sum:
+            return False
+        else:
+            return True
+
+    #######################################################################################
+    # Name: byte_arr_to_int
+    # Description: accepts an array of 5 bytes and ors them into their respective relative
+    #              positions in an integer. That integer is returned.
+    #######################################################################################
+    @staticmethod
+    def data_bytes_to_int(byte_arr):
+        # only using data bytes to build up an int to evaluate (byte[0] is checksum and byte[5] is magic byte)
+        i1 = byte_to_int(byte_arr[0])
+        i2 = (byte_to_int(byte_arr[1]) << 4)
+        i3 = (byte_to_int(byte_arr[2]) << 8)
+        i4 = (byte_to_int(byte_arr[3]) << 12)
+        return i1 | i2 | i3 | i4
+
+    ##############################################################
     # Name: set_open_port_flags
     # Description: helper method that sets the port flags to open
-    #########################################################
+    ##############################################################
     @staticmethod
     def set_open_port_flags():
         av.has_port_connected_before = True
