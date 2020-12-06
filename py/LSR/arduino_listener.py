@@ -1,9 +1,9 @@
-################################################
+######################################################################################################################
 # File: arduino_listener
 # Description: file holding the arduino listener class. This class is in charge of managing the serial port of the Pi
 #              side, reading from the arduino,k checking if the read input is valid and then pushing the valid result
 #              to a shared piece of memory for the display to use in rendering the UI
-################################################
+######################################################################################################################
 # imports
 from serial import Serial, SerialException
 from serial_util import *
@@ -142,25 +142,6 @@ class ArduinoListener:
                     self.serial_count = 0
                 else:
                     self.serial_count += 1
-
-            # # read if there is anything in the input buffer
-            # try:
-            #     while self.ser.in_waiting > 0:
-            #         print("inside serial read")
-            #         # append next byte to data buffer
-            #         in_byte = self.ser.read()
-            #         in_int = byte_to_int(in_byte)
-            #         av.arduino_data_buffer.append(in_byte)
-            #         # if there is 6 bytes and the last one is empty, just clear and return
-            #         # if header bits are set in data bytes or the serial count exceeds the buffer size
-            #         if len(av.arduino_data_buffer) > 5 and in_int > 127:
-            #             if is_input_valid(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)]):
-            #                 result = byte_arr_to_int(av.arduino_data_buffer[-6:len(av.arduino_data_buffer)])
-            #                 result_arr = []
-            #                 result_arr.append(result)
-            #                 av.return_val.append(result_arr)
-            #                 self.ser.write(0)
-            #             return
 
         except SerialException:  # read failed
             print("Serial ex")

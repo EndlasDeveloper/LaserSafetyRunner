@@ -34,14 +34,12 @@ class Display:
     def __init__(self):
         # the current state of the system
         self.state = 0
-
         # pygame images
         self.py_img_last = ""
         self.py_img_obj = None
         self.last_py_img_path = ""
         self.img_path = ""
         self.last_img_path = ""
-
         # initialize pygame
         pygame.init()
         # setup canvas
